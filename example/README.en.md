@@ -1,3 +1,12 @@
+# Detailed Examples
+
+| Topic | Link |
+|------|------|
+| 📊 Data AI Demo 1: Statistical Analysis with R | [Shanghai Housing Price Analysis](https://zhuanlan.zhihu.com/p/2049374035537048216) |
+| 🤖 Data AI Demo 2: ML Modeling & Prediction with Python | [Shanghai Housing Price Prediction](https://zhuanlan.zhihu.com/p/2049440033069854731) |
+
+---
+
 # End-to-End Example: Melbourne Housing Price Prediction
 
 > Deep integration of Traditional ML (LightGBM) with Large Language Model AI (OpenClaw)
