@@ -429,6 +429,8 @@ jupyter labextension list
 | 📈 RStudio + OpenClaw Vibe Coding & 数据分析 | [R 语言实战](https://zhuanlan.zhihu.com/p/2044067725241210044) |
 | 🏗️ OpenClaw Ubuntu 24 多用户部署方案 | [基础架构](https://zhuanlan.zhihu.com/p/2046116340784697542) |
 | 🏗️ OpenClaw Ubuntu 24 多用户部署方案生产级增强 | [生产级增强](https://zhuanlan.zhihu.com/p/2046909112571662596) |
+| 📊 Data AI Demo之一：R语言统计分析 | [上海二手房房价分析](https://zhuanlan.zhihu.com/p/2049374035537048216) |
+| 🤖 Data AI Demo之二：Python ML建模与预测 | [上海二手房房价预测](https://zhuanlan.zhihu.com/p/2049440033069854731) |
 
 ------------------------------------------------------------------------
 
