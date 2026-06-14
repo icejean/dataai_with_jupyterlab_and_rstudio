@@ -431,6 +431,8 @@ Restart JupyterLab after installation for changes to take effect. For JupyterHub
 | 📈 RStudio + OpenClaw Vibe Coding & Data Analysis | [R Language Practice](https://zhuanlan.zhihu.com/p/2044067725241210044) |
 | 🏗️ OpenClaw Ubuntu 24 Multi-User Deployment | [Basic Architecture](https://zhuanlan.zhihu.com/p/2046116340784697542) |
 | 🏗️ OpenClaw Ubuntu 24 Multi-User Deployment (Enhanced) | [Production-Grade Enhancement](https://zhuanlan.zhihu.com/p/2046909112571662596) |
+| 📊 Data AI Demo 1: Statistical Analysis with R | [Shanghai Housing Price Analysis](https://zhuanlan.zhihu.com/p/2049374035537048216) |
+| 🤖 Data AI Demo 2: ML Modeling & Prediction with Python | [Shanghai Housing Price Prediction](https://zhuanlan.zhihu.com/p/2049440033069854731) |
 
 ------------------------------------------------------------------------
 
