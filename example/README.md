@@ -1,3 +1,12 @@
+## 详细示例
+
+| 主题 | 链接 |
+|------|------|
+| 📊 Data AI Demo之一：R语言统计分析 | [上海二手房房价分析](https://zhuanlan.zhihu.com/p/2049374035537048216) |
+| 🤖 Data AI Demo之二：Python ML建模与预测 | [上海二手房房价预测](https://zhuanlan.zhihu.com/p/2049440033069854731) |
+
+---
+
 # 端到端示例：墨尔本房价预测
 
 > 传统机器学习（LightGBM）与 大模型 AI（OpenClaw）的深度融合
