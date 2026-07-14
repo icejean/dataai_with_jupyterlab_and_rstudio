@@ -406,8 +406,31 @@ cp -R jupyterlab-console-adopt/jupyterlab_console_adopt/labextension/  ~/.local/
 
 > 源路径末尾的 `/` 表示拷贝目录**内容**而非目录本身，目标路径需先创建对应目录名。
 
-#### 验证安装
+注意：直接拷贝安装要检查与Jupyter Lab版本的匹配，源码中的Extention是在Jupyter Lab 4.3.4上构建的。
+```
+vi ./jupyterlab-console-adopt/package.json
+```
+Jupyter Lab 4.x版本之间的兼容性比较好，Extention是在Jupyter Lab 4.3.4上build的，直接修改package.json里的版本为当前版本，比如4.4.7即可。
+```
+  "dependencies": {
+    "@jupyterlab/application": "~4.4.7",
+    "@jupyterlab/cells": "~4.4.7",
+    "@jupyterlab/console": "~4.4.7"
+  },
+```
+```
+vi ./jupyterlab-auto-reload/package.json
+```
+```
+  "dependencies": {
+    "@jupyterlab/application": "~4.4.7",
+    "@jupyterlab/notebook": "~4.4.7"
+  },
+```
 
+
+#### 验证安装
+重启JupyterHub。
 ``` bash
 jupyter labextension list
 # 应看到两个扩展均在列表中

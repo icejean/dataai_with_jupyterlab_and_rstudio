@@ -77,6 +77,9 @@ hook.register()
 
 配置完成后重启 OpenClaw 即可自动拉起 MCP Server。
 
+说明：在多用户模式下，MCP Server的源码可以放在共享的目录中，所有用户对共享目录要有透传的读与执行的权限，这样便于集中管理源码的更新。
+共享MCP Server源码目录时，要包括已经生成的__pycache__目录下的cache文件，因为实际执行的是__pycache__里的文件。
+
 ### 4. 使用
 
 连接到 OpenClaw 后，你可以使用以下工具操作 Jupyter kernel:
