@@ -77,6 +77,8 @@ Add this to the `mcp.servers` section of your `openclaw.json`:
 
 Once configured, restart OpenClaw to automatically start the MCP Server.
 
+> **Note for multi-user environments:** The MCP Server source code can be placed in a shared directory accessible to all users, with read and execute permissions, making it easier to centrally manage source updates. When sharing the MCP Server source directory, include the existing `__pycache__` directory and its compiled cache files, since Python actually executes the cached files in `__pycache__`.
+
 ### 4. Usage
 
 After connecting to OpenClaw, you can use the following tools to interact with the Jupyter kernel:

@@ -408,6 +408,27 @@ cp -R jupyterlab-console-adopt/jupyterlab_console_adopt/labextension/  ~/.local/
 
 > The trailing `/` on the source path means copy the directory **contents** rather than the directory itself. The target directory must be created first.
 
+> **Note:** Direct copy installation requires checking compatibility with your JupyterLab version. The extensions were built on JupyterLab 4.3.4. JupyterLab 4.x versions are generally compatible — simply modify the version numbers in `package.json` to match your current version (e.g., 4.4.7):
+> ```
+> vi ./jupyterlab-console-adopt/package.json
+> ```
+> ```
+>   "dependencies": {
+>     "@jupyterlab/application": "~4.4.7",
+>     "@jupyterlab/cells": "~4.4.7",
+>     "@jupyterlab/console": "~4.4.7"
+>   },
+> ```
+> ```
+> vi ./jupyterlab-auto-reload/package.json
+> ```
+> ```
+>   "dependencies": {
+>     "@jupyterlab/application": "~4.4.7",
+>     "@jupyterlab/notebook": "~4.4.7"
+>   },
+> ```
+
 #### Verify Installation
 
 ``` bash
