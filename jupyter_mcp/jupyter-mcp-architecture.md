@@ -617,8 +617,7 @@ jupyter_mcp/
 ├── jupyter-mcp-server.py    # MCP Server（OpenClaw 管理）
 ├── setup.py                 # 可编辑安装配置（pip install -e .）
 ├── README.md                # 快速入门文档
-├── jupyter-mcp-architecture.md  # 本文档
-└── auto_reload.js           # auto-reload 扩展独立 JS 版本（注入式）
+└── jupyter-mcp-architecture.md  # 本文档
 
 jupyterlab-auto-reload/      # Notebook 自动刷新扩展（工程构建版）
 ├── package.json

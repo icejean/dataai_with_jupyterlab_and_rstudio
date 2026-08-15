@@ -624,8 +624,7 @@ jupyter_mcp/
 ├── jupyter-mcp-server.py    # MCP Server (managed by OpenClaw)
 ├── setup.py                 # Editable install config (pip install -e .)
 ├── README.md                # Quick start guide
-├── jupyter-mcp-architecture.md  # This document
-└── auto_reload.js           # Standalone auto-reload JS (injectable)
+└── jupyter-mcp-architecture.md  # This document
 
 jupyterlab-auto-reload/      # Notebook auto-refresh extension (source build)
 ├── package.json
