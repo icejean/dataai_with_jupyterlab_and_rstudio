@@ -159,7 +159,7 @@ R Session                          Jupyter Kernel
 ## 项目结构
 
 ```         
-openclaw_with_jupyterlab_and_rstudio/
+dataai_with_jupyterlab_and_rstudio/
 │
 ├── jupyter_mcp/                     # Python 侧：Jupyter MCP Server
 │   ├── jupyter-mcp-server.py        #    MCP Server（ZMQ 直连 Jupyter Kernel）
@@ -334,8 +334,8 @@ R Session                    CSV 文件                    Jupyter Kernel
 ### 安装
 
 ``` bash
-git clone https://github.com/icejean/openclaw_with_jupyterlab_and_rstudio.git
-cd openclaw_with_jupyterlab_and_rstudio
+git clone https://github.com/icejean/dataai_with_jupyterlab_and_rstudio.git
+cd dataai_with_jupyterlab_and_rstudio
 ```
 
 各子目录有详细部署说明：
