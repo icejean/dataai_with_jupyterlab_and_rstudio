@@ -88,6 +88,7 @@ AI 模型 ⇄ DSH ⇄ MCP (jupyter-mcp) ⇄ ZMQ (jupyter_client) ⇄ Jupyter Lab
 **工作流程：**
 1. `run_code` 执行代码 → 自动插入新 Cell 到 .ipynb 文件
 2. `jupyterlab-auto-reload` 扩展在 3 秒内自动刷新 Notebook 显示
+   —— ⚠️ **仅当浏览器模型"不脏"时才会刷新**，脏模型会静默跳过（见下方实测结论 B）
 3. 结果写回 Cell 中，包含执行序号和输出
 
 **可用工具：** `run_code`（自动插 Cell + 写回结果）
@@ -95,6 +96,71 @@ AI 模型 ⇄ DSH ⇄ MCP (jupyter-mcp) ⇄ ZMQ (jupyter_client) ⇄ Jupyter Lab
 **注意：** JupyterHub-singleuser 跑在 base conda 环境（`/usr/lib64/anaconda3/bin/jupyterhub-singleuser`），扩展需安装到 **base 环境的全局路径** `/usr/lib64/anaconda3/share/jupyter/labextensions/`，而非 graphrag 环境（`.../envs/graphrag/share/jupyter/labextensions/`）
   - `jupyterlab-console-adopt` 自定义扩展已安装到此路径 ✅
   - `jupyterlab-auto-reload` 也在这里有一份副本，确保 JupyterHub 能加载
+
+#### ⚠️ Notebook 模式实测结论（2026-09-30 全项验证）
+
+**A. 写入机制 = 整文件 read-modify-write，绕开浏览器模型**
+
+`jupyter-mcp-server.py` 的 `NotebookClient`：
+`get_notebook()`（GET `/api/contents/<path>`）→ 末尾 append cell → `save_notebook()`（PUT 整个 notebook）
+→ 再 `POST /checkpoints` 建检查点。**只改磁盘，不动浏览器里的内存模型。**
+
+**B. ⚠️ 最大的坑：浏览器"脏模型"会让自动刷新静默失效**
+
+`jupyterlab-auto-reload`（3 秒轮询 `last_modified`）源码逻辑：
+
+```js
+if(o!==a[n]){ a[n]=o; const e=r.model;
+  e&&e.dirty ? console.log(`[auto-reload] File changed: ${n}, unsaved changes exist. Skipping.`)
+             : (await r.revert(), …) }
+```
+
+**模型 dirty 时直接 `Skipping`。** 于是当浏览器里是一个**空的、未保存**的笔记本模型时，
+每 3 秒都跳过刷新 —— 磁盘上明明有 N 个 cell，用户看到的却是**一片空白**
+（连他自己之前跑过的 hook cell 也"消失"了），极易误判成"MCP 写错文件了"。
+
+**排查口径（先查这个，再怀疑路径）：**
+1. `stat -c '%y %s' <notebook>` + 解析 cell 数 —— **磁盘为准**
+2. 读 `~/.jupyter/lab/workspaces/default-*.jupyterlab-workspace` 的 `layout-restorer:data`
+   → `main.dock.widgets` / `main.current` —— **这才是用户浏览器真正打开的标签，权威**
+3. `GET /api/sessions` —— 确认 session 的 `path` 与 kernel id
+4. `~/.jupyter-mcp/current` 的 `source_path` + kernel id —— 三者必须一致
+5. 让用户 **Ctrl+Shift+R 硬刷新**（⚠️ **别按保存**：空模型一保存就把磁盘上的 cell 全覆盖了）
+
+**C. `Cell #N` 是 1-based 的 cell 位置，不是 `execution_count`**
+
+两者初始一致，一旦出现"幽灵执行"就分叉。实测：MCP 报 `Cell #7`，该 cell 的 `execution_count` 实为 `8`。
+
+**幽灵执行来源：** MCP 的 `export_data` / `import_data` 内部走 kernel `execute_request`，
+Notebook 模式下**不产生 cell，但会消耗一次执行号**。
+实测序列 `[1, None, 3, 4, 5, 6, 8, 9, 10, 11]` —— 缺的 `7` 就是 Python 侧 `import_data` 占掉的。
+
+**D. 工具可用性：Notebook 模式只有 `run_code`**
+
+| 工具 | Notebook 模式 |
+|---|---|
+| `run_code` | ✅ 插 cell + 写回结果 |
+| `export_data` / `import_data` | ✅ 可用，**不产生 cell**（但占执行号，见 C） |
+| `read_source` / `write_source` / `append_source` | ❌ 报 `当前不是 .py + Console 模式，或找不到 .py 源文件路径` |
+
+**E. 已验证正常的能力（12 项全过）**
+
+- `run_code` 1 次调用插 1 个 cell，source 完整，`stream` + `execute_result` 两类输出齐全
+- 报错 → cell 内同时含报错前的 `stream` **和** `error`（ename/evalue/traceback）
+- 无输出语句（如 `x = 42`）→ 仍插 cell，`outputs=[]`
+- 图片 → 真 `image/png` 内嵌进 cell（非仅文本）
+- matplotlib 中文 → `SimHei` 解析到 `/usr/share/fonts/myfonts/simhei.ttf`，**0 条 glyph-missing**
+- `nbformat.validate` 通过
+- 与 R 侧 r2py 通道一致：n 完全相等，价格相对差 ≤ `5.7e-10`（≪ `1e-7`）
+
+**F. R↔Python 数据交换的可见性差异（补全后文表格）**
+
+| 方式 | Notebook 模式 | .py + Console 模式 |
+|---|---|---|
+| MCP 工具 `export_data` / `import_data` | ❌ 无 cell（占执行号） | ✅ console-adopt 生成 CodeCell |
+| 标准代码（`pd.read_csv` / `to_csv`）写在 `run_code` 里 | ✅ **有 cell** | ✅ 有 CodeCell |
+
+> 需要在 Notebook 里留痕的导入导出，**用标准代码方式**（写进 `run_code`）。
 
 ---
 
