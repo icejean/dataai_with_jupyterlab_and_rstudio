@@ -315,8 +315,8 @@ app <- list(
 
         response <- list(
           success   = ret$success,
-          output    = ret$output,
-          new_objs  = ret$new_objs,
+          output    = I(ret$output),
+          new_objs  = I(ret$new_objs),
           changed   = ret$changed
         )
 
@@ -335,7 +335,7 @@ app <- list(
             response$result <- head(ret$result, n_show)
             response$result_dim <- dim(ret$result)
           } else {
-            response$result_str <- capture.output(print(ret$result))
+            response$result_str <- I(capture.output(print(ret$result)))
           }
           response$result_class <- class(ret$result)
         }
@@ -355,7 +355,7 @@ app <- list(
         code <- params$code
         ret <- safe_eval(code, console_echo = FALSE)
 
-        response <- list(success = ret$success, output = ret$output)
+        response <- list(success = ret$success, output = I(ret$output))
         if (!ret$success) {
           response$error <- ret$error
         } else if (!is.null(ret$result)) {
@@ -366,7 +366,7 @@ app <- list(
             response$result <- head(ret$result, n_show)
             response$result_dim <- dim(ret$result)
           } else {
-            response$result_str <- capture.output(print(ret$result))
+            response$result_str <- I(capture.output(print(ret$result)))
           }
           response$result_class <- class(ret$result)
         }

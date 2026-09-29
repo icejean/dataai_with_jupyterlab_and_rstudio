@@ -111,6 +111,17 @@ def make_text(content: str) -> list[types.TextContent]:
     return [types.TextContent(type="text", text=content)]
 
 
+def _as_list(value):
+    """把 R API 的 auto_unbox 可能压成的标量归一化回列表，防止逐字符迭代/join。"""
+    if value is None:
+        return []
+    if isinstance(value, str):
+        return [value]
+    if isinstance(value, (list, tuple)):
+        return list(value)
+    return [value]
+
+
 # ── 工具定义 ──────────────────────────────────────────────────────────────
 
 TOOLS = [
@@ -333,7 +344,7 @@ async def handle_call_tool(
                 lines.append(f"错误: {inner.get('error', '未知错误')}")
 
             # 输出（成功/失败都要展示！报错前的输出对定位问题至关重要）
-            output = inner.get("output", [])
+            output = _as_list(inner.get("output"))
             if output and not quiet:
                 total = len(output)
                 truncated = total > OUTPUT_LINE_LIMIT
@@ -346,14 +357,14 @@ async def handle_call_tool(
                     lines.append(f"  ... (输出已截断，共 {total} 行，仅显示前 {OUTPUT_LINE_LIMIT} 行)")
 
             # 新创建/修改的对象
-            new_objs = inner.get("new_objs", [])
+            new_objs = _as_list(inner.get("new_objs"))
             if new_objs:
                 lines.append(f"\n📦 新/变更对象: {', '.join(new_objs)}")
 
             # 返回值
             result = inner.get("result")
             if result is not None:
-                result_str = inner.get("result_str")
+                result_str = _as_list(inner.get("result_str"))
                 if result_str:
                     lines.append("\n🔙 返回值:")
                     for line in result_str:
