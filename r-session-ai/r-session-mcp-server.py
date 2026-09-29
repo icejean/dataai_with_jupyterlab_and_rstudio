@@ -33,6 +33,10 @@ R_API_PORT = int(os.environ.get("R_API_PORT", "8161"))
 R_API_TIMEOUT = float(os.environ.get("R_API_TIMEOUT", "30"))
 R_API_BASE = f"http://{R_API_HOST}:{R_API_PORT}"
 
+# run_code 输出行数上限（可配置）。R API 本身无上限，这里在 MCP 层做行数截断，
+# 防止长分析报告撑爆 Agent 上下文。报错前的输出也会一并展示（成功/失败都展示）。
+OUTPUT_LINE_LIMIT = int(os.environ.get("R_SESSION_OUTPUT_LINE_LIMIT", "2000"))
+
 # 日志降到 WARNING：INFO（含 httpx 逐请求 "HTTP Request: ..."）会经 stderr 漏进
 # dsh-tui 输入区——dsh-tui 把 MCP 子进程的 stderr 直接继承给终端、绕过渲染器。
 # WARNING/ERROR 保留。
@@ -319,35 +323,37 @@ async def handle_call_tool(
             endpoint = "/eval/quiet" if quiet else "/eval"
             data = rpc_post(endpoint, {"code": code})
 
+            inner = data.get("data") or {}
             lines = []
-            if data.get("success"):
+            # 外层 success 只代表 HTTP 调用成功；R 代码成败必须看内层 data.success
+            if inner.get("success"):
                 lines.append("✅ 执行成功")
             else:
                 lines.append("❌ 执行出错")
-                lines.append(f"错误: {data['data'].get('error', '未知错误')}")
+                lines.append(f"错误: {inner.get('error', '未知错误')}")
 
-            # 输出
-            output = data["data"].get("output", [])
+            # 输出（成功/失败都要展示！报错前的输出对定位问题至关重要）
+            output = inner.get("output", [])
             if output and not quiet:
-                truncated = False
-                if len(output) > 200:
-                    output = output[:200]
-                    truncated = True
+                total = len(output)
+                truncated = total > OUTPUT_LINE_LIMIT
+                if truncated:
+                    output = output[:OUTPUT_LINE_LIMIT]
                 lines.append("\n📝 输出:")
                 for line in output:
                     lines.append(f"  {line}")
                 if truncated:
-                    lines.append("  ... (输出已截断)")
+                    lines.append(f"  ... (输出已截断，共 {total} 行，仅显示前 {OUTPUT_LINE_LIMIT} 行)")
 
             # 新创建/修改的对象
-            new_objs = data["data"].get("new_objs", [])
+            new_objs = inner.get("new_objs", [])
             if new_objs:
                 lines.append(f"\n📦 新/变更对象: {', '.join(new_objs)}")
 
             # 返回值
-            result = data["data"].get("result")
+            result = inner.get("result")
             if result is not None:
-                result_str = data["data"].get("result_str")
+                result_str = inner.get("result_str")
                 if result_str:
                     lines.append("\n🔙 返回值:")
                     for line in result_str:

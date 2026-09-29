@@ -97,26 +97,36 @@ safe_eval <- function(code, env = .GlobalEnv, console_echo = TRUE) {
   result <- NULL
   error  <- NULL
 
-  tryCatch({
-    if (console_echo) {
-      # sink 到临时文件，split=TRUE 同时输出到 Console
-      tf <- tempfile("recho_")
-      sink(tf, split = TRUE)
-      on.exit({ sink(); unlink(tf) }, add = TRUE)
+  if (console_echo) {
+    # sink 到临时文件，split=TRUE 同时输出到 Console
+    tf <- tempfile("recho_")
+    sink_depth <- sink.number()          # 记录进入前的 sink 深度，防被测代码自开 sink 导致栈错乱
+    sink(tf, split = TRUE)
+    tryCatch({
       visible <- withVisible(eval(parse(text = code), envir = env))
-      sink()
-      output <- readLines(tf, warn = FALSE)
-      unlink(tf)
-    } else {
-      # 静默模式：capture.output 不输出到 Console
+      result <- if (visible$visible) visible$value else NULL
+    }, error = function(e) {
+      error <<- e$message
+    }, finally = {
+      # 关键：无论成功/报错，都在这里关 sink 并取回全部已产生的输出
+      # （报错前的输出对定位问题至关重要，不能丢）
+      while (sink.number() > sink_depth) sink()
+      if (file.exists(tf)) {
+        output <- readLines(tf, warn = FALSE)
+        unlink(tf)
+      }
+    })
+  } else {
+    # 静默模式：capture.output 不输出到 Console
+    tryCatch({
       output <- capture.output({
         visible <- withVisible(eval(parse(text = code), envir = env))
       })
-    }
-    result <- if (visible$visible) visible$value else NULL
-  }, error = function(e) {
-    error <<- e$message
-  })
+      result <- if (visible$visible) visible$value else NULL
+    }, error = function(e) {
+      error <<- e$message
+    })
+  }
 
   # 检测新创建/修改的对象
   after <- ls(envir = env)
