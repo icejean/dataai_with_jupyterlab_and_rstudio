@@ -184,6 +184,126 @@ matplotlib.rcParams['axes.unicode_minus'] = False       # 解决负号显示问�
 - R API 中 `safe_eval()` 的 `console_echo` 参数控制是否回显到 Console
 - 绘图用 `source(echo = TRUE)` 也能正常渲染到 RStudio Plots 面板
 
+### ⚠️ R 作图：回显 Plots 面板的正确姿势（2026.9.30 实测）
+
+**核心：不要打开显式设备，直接 `print(p)` 走默认设备 RStudioGD。**
+
+```r
+# ✅ 正确——图进 RStudio Plots 面板
+p <- ggplot(...) + theme_minimal(base_family = "SimSun")
+print(p)
+
+# ❌ 错误——只写出文件，Plots 面板看不到
+agg_png("out.png"); print(p); dev.off()
+png("out.png");     print(p); dev.off()
+```
+
+- `getOption("device")` 为 `"RStudioGD"` 时，`print(p)` 才会进 Plots 面板
+- 脚本开头建议 `graphics.off()` 清掉遗留的显式设备（否则 `dev.cur()` 可能仍是 `agg_png`）
+- 执行方式仍按可见模式：写入 `~/.dsh/workspace/R/xxx.R` 后 `source("R/xxx.R", echo = TRUE)`
+
+### ⚠️ R 作图：中文字体只能用 `SimSun`（2026.9.30 实测）
+
+**RStudioGD 设备上，`SimHei` / `黑体` 都解析不到，会静默回退成 `wqy-microhei` 并打印警告：**
+
+```
+font family 'SimHei' not found, will use 'wqy-microhei' instead
+```
+
+实测各 family 在 RStudioGD 上的解析结果：
+
+| family | RStudioGD 是否可解析 |
+|---|---|
+| **`SimSun`** | ✅ **可解析，无警告 —— 推荐** |
+| `sans` | ✅ |
+| `wqy-microhei` | ✅（RStudio 自带回退字体） |
+| `SimHei` / `黑体` / `simhei` / `Hei` | ❌ 回退 |
+| `SimSun`(中文名`宋体`) / `NSimSun` / `FangSong` / `KaiTi` | ❌ 回退 |
+| `Droid Sans Fallback` | ❌ 回退 |
+
+> 原因：`simhei.ttf` 的**内部 family 名只有中文「黑体」**，RStudioGD 按内部 family 名匹配，
+> 而 `fc-match SimHei` 能命中只是 fontconfig 的别名机制——两者不是一回事。
+> `simsun.ttc` 内部 family 名是英文 `SimSun`，故可解析。
+>
+> 这与上面 **Python 侧用 `SimHei`** 的结论不同：matplotlib 走 fontconfig/字体文件路径，
+> R 的 RStudioGD 走内部 family 名。**R 用 `SimSun`，Python 用 `SimHei`，不要混用。**
+
+标准写法：
+
+```r
+theme_cn <- theme_minimal(base_family = "SimSun", base_size = 12) +
+  theme(plot.title    = element_text(family = "SimSun", face = "bold"),
+        plot.subtitle = element_text(family = "SimSun"),
+        axis.title    = element_text(family = "SimSun"),
+        axis.text     = element_text(family = "SimSun"),
+        legend.text   = element_text(family = "SimSun"),
+        legend.title  = element_text(family = "SimSun"))
+```
+
+### ⚠️ RMariaDB 把 BIGINT 返回成 raw
+
+`SELECT COUNT(*)` 这类 BIGINT 列经 RMariaDB 回来是 **raw 向量**，直接 `as.numeric()` 会得到
+`4.94e-324` 这种垃圾值（实为 1）。两种解法：
+
+```r
+# 方案A：SQL 侧转 DOUBLE（推荐，最省事）
+dbGetQuery(con, "SELECT CAST(COUNT(*) AS DOUBLE) n FROM t")
+
+# 方案B：R 侧按小端序还原 raw
+num1 <- function(x) {
+  if (is.raw(x)) { if (!length(x)) return(0); sum(as.numeric(x) * 256^(seq_along(x)-1)) }
+  else as.numeric(x)
+}
+```
+
+### ⚠️ 长输出超限 → 用 `run_with_sink.R` 落盘
+
+R API 输出超过上限会截断（默认 2000 行，可用环境变量 `R_SESSION_OUTPUT_LINE_LIMIT` 调）。
+需要完整结果时，用 `R/run_with_sink.R` 落盘再用 read 读：
+
+```r
+SRC <- "/home/ubuntu/.dsh/workspace/R/analyze_shanghai_housing.R"
+OUT <- "/home/ubuntu/.dsh/workspace/R/analyze_output.txt"
+source("R/run_with_sink.R", echo = TRUE)
+```
+
+> **已修复（2026.9.30，commit `c0737a3`）：** 早前 R API 的「200 行硬截断 + 报错误报成功/丢输出」
+> 两个 bug 已修——现在报错会返回 `❌ 执行出错` + 错误信息 + 报错前的输出，输出上限提到
+> 2000 行（可配置）。只有超过上限（或确需落盘）才需要 sink。Python 侧（jupyter-mcp）
+> 始终无行数上限、直接 print 即可。
+
+### ⚠️ Python 侧：`.py + Console` 模式不落盘
+
+`.py + Console` 模式下 `run_code` **不修改 `.py` 文件**（见上文说明），
+代码只存在于 Console 历史里——**kernel 一重启分析就没了**。
+需要可复现时，另外把脚本写盘管理（本仓库放在 `~/.dsh/workspace/py/`，
+与 R 的 `R/` 子目录对称）：
+
+```
+~/.dsh/workspace/py/analyze_shanghai_housing.py   # 对应 R/ 下三个脚本的 Python 版
+```
+
+**验证 matplotlib 中文确实生效的方法**（比看墨迹占比可靠）：
+
+```python
+from matplotlib import font_manager as fm
+from matplotlib.font_manager import FontProperties
+fm.findfont(FontProperties(family="SimHei"), fallback_to_default=False)
+# -> /usr/share/fonts/myfonts/simhei.ttf   ✅ 真在用
+# 对照：family="DejaVu Sans" 渲染中文会报 26 条 "Glyph xxxxx missing from font"
+```
+
+### ⚠️ 变量名禁区（会被 API 误用为函数而 500）
+
+R API 辅助函数住在 `.GlobalEnv`，**给变量起下面这些名字会直接覆盖掉函数**，
+下一次调用即报 `没有"ok"这个函数` / 500 错误：
+
+`ok` `err` `safe_eval` `server` `app` `PORT` `HOST` `API_TOKEN` `MAX_ROW`
+`obj_to_list` `safe_str` `parse_json_body` `env_port`
+
+误覆盖后按 `r-session-api.R` 第 144/155 行的定义重新赋值 `ok` / `err` 即可恢复
+（无需重启 server）。本次实践就踩过一次：`ok <- tryCatch(...)` 把 `ok()` 干掉了。
+
 ### 关键端点
 | 端点 | 用途 |
 |---|---|
