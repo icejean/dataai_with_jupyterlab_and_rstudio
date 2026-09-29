@@ -1,14 +1,16 @@
 # Data AI
 
-> OpenClaw / Claude Code with Jupyter Lab and Rstudio
+> OpenClaw / DeepSeek Harness / Claude Code with Jupyter Lab and Rstudio
 
-An integrated **Python + R** data analysis workbench, powered by the **OpenClaw AI Agent** as its brain, connecting **JupyterLab (Python)** and **RStudio (R)** — two interactive analysis engines — through the **MCP protocol** to unify tool interfaces and enable seamless cross-language data flow. Command with natural language, access via mobile phone or browser — data analysis made simple and accessible.
+An integrated **Python + R** bilingual data analysis workbench, powered by an **AI Agent** as its brain, connecting **JupyterLab (Python)** and **RStudio (R)** — two interactive analysis engines — through the **MCP protocol** to unify tool interfaces and enable seamless cross-language data flow. Switch between two agent backends — **OpenClaw** / **DeepSeek Harness (DSH)** — and command with natural language, access via mobile phone or browser.
+
+Built for **professional data analysts who write code and can take over from the AI** to continue exploring on their own: the AI gets things started and moves them forward, and you take over the code whenever you like.
 
 ------------------------------------------------------------------------
 
 ## Why This Exists
 
-Python and R each have irreplaceable ecosystems. Traditional solutions (like Posit/Quarto) focus on R-side integration, with Python relying on reticulate — a fragmented experience. This solution uses **OpenClaw Agent as the glue layer** + **MCP Server as the bridge** + **CSV sharing for data exchange**, letting both languages play to their strengths and collaborate smoothly on a single platform.
+Python and R each have irreplaceable ecosystems. Traditional solutions (like Posit/Quarto) focus on R-side integration, with Python relying on reticulate — a fragmented experience. This solution uses **an AI Agent (OpenClaw / DeepSeek Harness) as the glue layer** + **MCP Server as the bridge** + **CSV sharing for data exchange**, letting both languages play to their strengths and collaborate smoothly on a single platform.
 
 ### Core Advantages
 
@@ -18,6 +20,8 @@ Python and R each have irreplaceable ecosystems. Traditional solutions (like Pos
 -   🪶 Lightweight browser interface, easy to deploy and maintain
 -   🔓 Fully open source and free
 -   📊 AI in **coding phase** + **data analysis phase**
+-   🤖 **Dual agent backends**: OpenClaw (embedded mode + exclusive tools) / DeepSeek Harness (native domestic-model access, IT-infra friendly)
+-   🎯 **Built for professional data analysts**: you write code — the AI starts, you take over anytime
 
 ------------------------------------------------------------------------
 
@@ -32,7 +36,7 @@ Python and R each have irreplaceable ecosystems. Traditional solutions (like Pos
                           └──────────┬───────────┘
                                      │
                           ┌──────────▼───────────┐
-                          │    OpenClaw Agent    │  ← AI Brain
+                          │ Agent (OpenClaw/DSH) │  ← AI Brain
                           │Dialog + Route + MCP  │  ← All tools via MCP
                           └──┬───────────────┬───┘
                              │               │
@@ -61,12 +65,14 @@ Python and R each have irreplaceable ecosystems. Traditional solutions (like Pos
                      └────────────────────────┘
 ```
 
+> **Dual agent backend:** the "AI Brain" in the diagram supports two switchable backends — **OpenClaw** (default) and **DeepSeek Harness / DSH** — both sharing the same pair of MCP Servers (`jupyter-mcp` + `r-session`); only the terminal launch command differs. See [dsh/README.md](./dsh/README.md).
+
 ### Two Data Flow Paths in Detail
 
 #### ① Python Side (jupyter-mcp)
 
 ```         
-OpenClaw Agent
+Agent
     │ callTool(run_code, ...) ← MCP Protocol
     ▼
 jupyter-mcp-server.py  (MCP Server, Python, runs in graphrag conda env)
@@ -100,7 +106,7 @@ MCP Server                              Jupyter Kernel
 #### ② R Side (r-session)
 
 ```         
-OpenClaw Agent
+Agent
     │ callTool(run_code, ...) ← MCP Protocol
     ▼
 r-session-mcp-server.py  (MCP Server, Python, runs in graphrag conda env)
@@ -191,6 +197,12 @@ openclaw_with_jupyterlab_and_rstudio/
 │   ├── Melbourne_housing_pre.csv    #    Preprocessed data
 │   ├── Melbourne_housing_LGBM.py    #    LightGBM training & tuning
 │   └── demo-*.png                   #    22-step mobile screenshots
+│
+├── dsh/                             # DeepSeek Harness (DSH) backend integration
+│   ├── README.md                    #    DSH install / config / launch (dsh-tui)
+│   ├── AGENTS.md                    #    DSH persona (copy to ~/.dsh/)
+│   ├── credentials.yaml.template    #    Credentials template
+│   └── profiles/                    #    dsh-tui profile templates
 │
 ├── .gitignore
 ├── LICENSE                          # MIT License
@@ -334,18 +346,34 @@ Subdirectory deployment guides:
 |------------------------|------------------------|------------------------|
 | `jupyter_mcp/` | [README.en.md](./jupyter_mcp/README.en.md) | Jupyter MCP install & register |
 | `r-session-ai/` | [README.en.md](./r-session-ai/README.en.md) | R API startup & MCP config |
+| `dsh/` | [README.md](./dsh/README.md) | DeepSeek Harness (DSH) backend install & config |
 
 ### Recommended Usage
 
-#### 1. OpenClaw Runtime Mode
+#### 1. Agent Backend Choice (OpenClaw / DSH)
 
-Use `openclaw chat` in **embedded agent mode** (not gateway/Plugin mode), launched directly from the **Terminal** inside RStudio Server IDE or Jupyter Lab:
+DataAI supports two **parallel** agent backends, launched directly from the **Terminal** inside RStudio / JupyterLab, both sharing the same pair of MCP Servers (`jupyter-mcp` + `r-session`):
+
+| Backend | Launch command | Positioning |
+|---|---|---|
+| **OpenClaw** (default) | `openclaw chat` | Embedded mode, `baidu-search` skill, `agent-browser` and other exclusive tools |
+| **DeepSeek Harness / DSH** | `dsh --profile dsh-tui` (aliases `dsh-tui` / `dst`) | DeepSeek native harness, IT-infra friendly, direct domestic-model access |
+
+**OpenClaw** — recommended to use `openclaw chat` in **embedded agent mode** (not gateway/Plugin mode):
 
 ``` bash
 openclaw chat
 ```
 
 In this mode, OpenClaw runs as an embedded process, **does not start gateway or Plugin**, and each user's workspace is naturally and completely isolated — no port or process management needed. Ideal for multi-user deployment.
+
+**DSH** — DeepSeek's official harness (`@deepseek-ai/dsh`) with an interactive TUI (`dsh-tui`), aimed at IT-infrastructure environments and direct domestic-model access:
+
+``` bash
+dsh --profile dsh-tui    # or aliases dsh-tui / dst
+```
+
+Full install, config, and launch steps: [dsh/README.md](./dsh/README.md).
 
 #### 2. Browser Recommendation
 
@@ -463,10 +491,10 @@ Restart JupyterLab after installation for changes to take effect. For JupyterHub
 1.  **Start the environment:** Open JupyterLab and RStudio
 2.  **Register Python side:** Run `hook.register()` in a Jupyter cell
 3.  **Start R API:** Run `source("r-session-ai/r-session-api.R")` in RStudio Console
-4.  **Configure OpenClaw:** Modify MCP Server parameters in `openclaw/openclaw.json` for your environment
+4.  **Configure agent backend:** For OpenClaw, modify MCP Server parameters in `openclaw/openclaw.json`; for DSH, configure `~/.dsh/` per [dsh/README.md](./dsh/README.md)
 5.  **Configure MEMORY.md:** Adapt `openclaw/MEMORY.md` to your environment
 6.  **Configure Claude Code (recommended):** Claude can access domestic LLMs, works well with OpenClaw
-7.  **Start analyzing:** Give commands to OpenClaw via conversation
+7.  **Start analyzing:** Give commands to the agent via conversation
 
 ------------------------------------------------------------------------
 
