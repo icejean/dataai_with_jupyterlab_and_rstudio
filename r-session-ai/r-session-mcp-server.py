@@ -33,12 +33,17 @@ R_API_PORT = int(os.environ.get("R_API_PORT", "8161"))
 R_API_TIMEOUT = float(os.environ.get("R_API_TIMEOUT", "30"))
 R_API_BASE = f"http://{R_API_HOST}:{R_API_PORT}"
 
+# 日志降到 WARNING：INFO（含 httpx 逐请求 "HTTP Request: ..."）会经 stderr 漏进
+# dsh-tui 输入区——dsh-tui 把 MCP 子进程的 stderr 直接继承给终端、绕过渲染器。
+# WARNING/ERROR 保留。
 logging.basicConfig(
-    level=logging.INFO,
+    level=logging.WARNING,
     format="[R-MCP] %(message)s",
     stream=sys.stderr,
 )
 log = logging.getLogger(__name__)
+# 静音 httpx 逐请求 INFO 日志，显式兜底（level 已 WARNING，此处再明确一层）。
+logging.getLogger("httpx").setLevel(logging.WARNING)
 
 # R API Token 认证（环境变量 R_API_TOKEN，为空则不启用）
 R_API_TOKEN = os.environ.get("R_API_TOKEN", "")

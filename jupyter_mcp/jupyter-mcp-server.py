@@ -42,8 +42,10 @@ EXEC_TIMEOUT = int(os.environ.get("JUPYTER_MCP_TIMEOUT", "120"))
 # 多用户时各用户目录天然隔离，互不可见
 SHARED_DIR = os.environ.get("R2PY_SHARED_DIR", os.environ.get("JUPYTER_SHARED_DIR", os.path.expanduser("~/.openclaw/workspace/r2py")))
 
+# 日志降到 WARNING：启动/连接 INFO 会经 stderr 漏进 dsh-tui 输入区——dsh-tui 把
+# MCP 子进程的 stderr 直接继承给终端、绕过渲染器。WARNING/ERROR 保留。
 logging.basicConfig(
-    level=logging.INFO,
+    level=logging.WARNING,
     format="[Jupyter-MCP] %(message)s",
     stream=sys.stderr,
 )
@@ -256,16 +258,19 @@ print(json.dumps(_inspect_objects(), default=str, ensure_ascii=False))
 """
         result = self.execute(code)
         if result["success"]:
-            for out in result.get("output", []):
-                lines = out.get("text", "").strip().split("\n")
-                for i, line in enumerate(lines):
-                    if line.strip() == "__JUPYTER_MCP_JSON__":
-                        json_str = "\n".join(lines[i+1:])
-                        try:
-                            objs = json.loads(json_str)
-                            return {"success": True, "objects": objs, "count": len(objs)}
-                        except json.JSONDecodeError:
-                            pass
+            # 先拼接全部输出再定位 marker：kernel 可能把 marker 和 payload 拆成
+            # 两条 IOPub stream 消息（marker 先冲刷、payload 后到），逐条 out 查找会取到空串。
+            all_text = "".join(out.get("text", "") for out in result.get("output", []))
+            lines = all_text.strip().split("\n")
+            for i, line in enumerate(lines):
+                if line.strip() == "__JUPYTER_MCP_JSON__":
+                    json_str = "\n".join(lines[i+1:])
+                    try:
+                        objs = json.loads(json_str)
+                        return {"success": True, "objects": objs, "count": len(objs)}
+                    except json.JSONDecodeError as e:
+                        return {"success": False,
+                                "error": f"marker 后 JSON 解析失败: {e} | 片段: {json_str[:200]!r}"}
             return {"success": False, "error": "未找到输出"}
         return {"success": False, "error": str(result.get("error", "未知错误"))}
 
@@ -337,16 +342,18 @@ print(json.dumps(_info, default=str, ensure_ascii=False))
 """
         result = self.execute(code)
         if result["success"]:
-            for out in result.get("output", []):
-                lines = out.get("text", "").strip().split("\n")
-                for i, line in enumerate(lines):
-                    if line.strip() == "__JUPYTER_MCP_JSON__":
-                        json_str = "\n".join(lines[i+1:])
-                        try:
-                            info = json.loads(json_str)
-                            return {"success": True, "data": info}
-                        except json.JSONDecodeError:
-                            pass
+            # 先拼接全部输出再定位 marker（marker 与 payload 可能分属两条 IOPub 消息）。
+            all_text = "".join(out.get("text", "") for out in result.get("output", []))
+            lines = all_text.strip().split("\n")
+            for i, line in enumerate(lines):
+                if line.strip() == "__JUPYTER_MCP_JSON__":
+                    json_str = "\n".join(lines[i+1:])
+                    try:
+                        info = json.loads(json_str)
+                        return {"success": True, "data": info}
+                    except json.JSONDecodeError as e:
+                        return {"success": False,
+                                "error": f"marker 后 JSON 解析失败: {e} | 片段: {json_str[:200]!r}"}
             return {"success": False, "error": "未找到输出"}
         return {"success": False, "error": str(result.get("error", "无法预览对象"))}
 
@@ -370,16 +377,18 @@ print(json.dumps({pkg: _safe_version(mod) for pkg, mod in pkgs.items()}, ensure_
 """
         result = self.execute(code)
         if result["success"]:
-            for out in result.get("output", []):
-                lines = out.get("text", "").strip().split("\n")
-                for i, line in enumerate(lines):
-                    if line.strip() == "__JUPYTER_MCP_JSON__":
-                        json_str = "\n".join(lines[i+1:])
-                        try:
-                            pkgs = json.loads(json_str)
-                            return {"success": True, "packages": pkgs, "count": len(pkgs)}
-                        except json.JSONDecodeError:
-                            pass
+            # 先拼接全部输出再定位 marker（marker 与 payload 可能分属两条 IOPub 消息）。
+            all_text = "".join(out.get("text", "") for out in result.get("output", []))
+            lines = all_text.strip().split("\n")
+            for i, line in enumerate(lines):
+                if line.strip() == "__JUPYTER_MCP_JSON__":
+                    json_str = "\n".join(lines[i+1:])
+                    try:
+                        pkgs = json.loads(json_str)
+                        return {"success": True, "packages": pkgs, "count": len(pkgs)}
+                    except json.JSONDecodeError as e:
+                        return {"success": False,
+                                "error": f"marker 后 JSON 解析失败: {e} | 片段: {json_str[:200]!r}"}
             return {"success": False, "error": "未找到输出"}
         return {"success": False, "error": str(result.get("error", "无法获取包列表"))}
 

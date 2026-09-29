@@ -1,6 +1,6 @@
 # DeepSeek Harness (DSH) 后端接入 SPEC — DataAI（开源）
 
-> 状态：已验收（2026-09-29 修订：DSH 侧从 headless 改为 **dsh-tui**）
+> 状态：已验收（2026-09-29 修订：DSH 侧从 headless 改为 **dsh-tui**；安装改为 plugin 方式、启动 `dsh --profile dsh-tui` + 别名）
 > 关联：本仓库 `openclaw/MEMORY.md`、`jupyter_mcp/`、`r-session-ai/`；Portal 参考 `docs/deepseek-harness-integration.md`
 
 ## 1. 背景与目标
@@ -12,7 +12,7 @@ DataAI 当前跑在 **OpenClaw** 上，DeepSeek 作为模型（`openai-completio
 - 交互式终端界面 **dsh-tui**（`@deepseek-harness-tui/dsh-tui`）。
 - 与 OpenClaw 平级，复用**同一对 MCP Server**（jupyter-mcp + r-session），不改 MCP Server 核心逻辑（仅 r-session 加一个超时 env）。
 
-**使用方式**：DataAI 通过终端窗口使用 AI 辅助——OpenClaw 跑 `openclaw chat`、DSH 跑 `dsh-tui`，**无 wrapper、无 env 切换**（区别于 Portal 的 server 端 `AGENT_BACKEND` 后端服务）。
+**使用方式**：DataAI 通过终端窗口使用 AI 辅助——OpenClaw 跑 `openclaw chat`、DSH 跑 `dsh --profile dsh-tui`（自建别名 `dsh-tui`/`dst`），**无 env 切换**（区别于 Portal 的 server 端 `AGENT_BACKEND` 后端服务）。
 
 ## 2. 现状盘点（已核实）
 
@@ -34,13 +34,13 @@ DataAI 当前跑在 **OpenClaw** 上，DeepSeek 作为模型（`openai-completio
 ### 2.3 DSH 现状（已装）
 `~/.dsh/` 已就绪：`settings.yaml`（`llm-pi-ai:` 多 provider）、`.credentials.yaml`、`AGENTS.md`（persona，user-global）。**两个 profile 并存**：
 - `profiles/headless/` = **Portal**（server 端一次性调用 `dsh --profile headless --session-id ...`）。
-- `profiles/dsh-tui/` = **DataAI**（交互式 TUI，`dsh-tui`）。
+- `profiles/dsh-tui/` = **DataAI**（交互式 TUI，`dsh --profile dsh-tui`，别名 `dsh-tui`/`dst`）。
 
-全局装 `@deepseek-ai/dsh@0.1.2-rc.1` + `@deepseek-harness-tui/dsh-tui@0.11.1`；`dsh-tui` 首次运行自举 profile（内部 `dsh plugin --profile dsh-tui add ...`，需 pnpm）。
+dsh CLI 全局装 `@deepseek-ai/dsh@0.1.2-rc.1`；dsh-tui 用 **plugin 方式** `dsh plugin --profile dsh-tui add @deepseek-harness-tui/dsh-tui@0.11.1`（**不用** `npm -g`，后者会包依赖冲突）。plugin 装**不生成 `dsh-tui` 二进制**，启动用 `dsh --profile dsh-tui`（或自建别名 `dsh-tui`/`dst`，见 `dsh/README.md` §6）。
 
 ## 3. 定位决策（已定）
 
-- **并列**：OpenClaw 与 DSH 是两个并列后端，用户在终端各跑各的命令（`openclaw chat` / `dsh-tui`），无需 wrapper、无需 env 切换——对齐「DataAI 通过终端窗口使用 AI 辅助」的用法。
+- **并列**：OpenClaw 与 DSH 是两个并列后端，用户在终端各跑各的命令（`openclaw chat` / `dsh --profile dsh-tui`，别名 `dsh-tui`/`dst`），无需 env 切换——对齐「DataAI 通过终端窗口使用 AI 辅助」的用法。
 - OpenClaw 保留（嵌入模式、`baidu-search` skill、`agent-browser` 等专属工具）；DSH 作为 DeepSeek 原生 / 信创路径，二者共用同一对 MCP Server。
 - **profile 分属**：DataAI 用 `dsh-tui` profile、Portal 用 `headless` profile，两者 `cordis.patch.yml` 分属不同目录、互不干扰；唯一共享 `~/.dsh/AGENTS.md`（persona），用 `~/.dsh/switch-scene.sh <dataai|portal>` 切换（仅 swap AGENTS.md，对齐 `switch-config.sh` 语义）。
 
@@ -64,13 +64,13 @@ dsh/
 ├── README.md                          # DSH(dsh-tui) 接入说明（安装/配置/启动/验证）
 ├── AGENTS.md                          # 静态 persona（从 openclaw/MEMORY.md 改写，提交源码，用户自己拷贝）
 ├── profiles/dsh-tui/
-│   ├── package.json                   # bundles: dsh-base + dsh-tui（参考，dsh-tui 自举可生成）
+│   ├── package.json                   # bundles: dsh-base + dsh-tui（参考，dsh plugin add 可生成）
 │   ├── cordis.yml                     # 空 []（参考）
 │   └── cordis.patch.yml.template      # 模型 + 挂两个 MCP（占位符）
 └── credentials.yaml.template          # 只放键名，无明文
 docs/dsh-backend-spec.md               # 本文档
 ```
-（**无 `dataai-agent`** —— 终端直接跑 `openclaw chat` / `dsh-tui`。）
+（**无 `dataai-agent`** —— 终端直接跑 `openclaw chat` / `dsh --profile dsh-tui`。）
 
 ### 5.2 仓库改动
 - `r-session-ai/r-session-mcp-server.py`：`httpx.Client(timeout=30.0)` → `timeout=float(os.environ.get("R_API_TIMEOUT", "30"))`（默认 30，向后兼容）。
@@ -155,7 +155,7 @@ docs/dsh-backend-spec.md               # 本文档
 
 ## 8. 待拍板决策
 
-1. ~~并列 vs 替换~~ → **已定：并列**，终端直接跑 `openclaw chat` / `dsh-tui`，无 wrapper、无 env 切换。
+1. ~~并列 vs 替换~~ → **已定：并列**，终端直接跑 `openclaw chat` / `dsh --profile dsh-tui`（别名 `dsh-tui`/`dst`），无 env 切换。
 2. ~~AGENTS.md 生成方式~~ → **已定：静态 `dsh/AGENTS.md` 手写提交，不写 sync 脚本**。
 3. ~~OpenClaw 专属段落~~ → **已定：剥离**（嵌入式模式/`agent-browser`/`baidu-search`/邮件，非数据分析必需）。
 4. ~~r2py 共享目录~~ → **已定：由后端 env 决定**，DSH 设 `R2PY_SHARED_DIR` 到 `~/.dsh/workspace/r2py`。

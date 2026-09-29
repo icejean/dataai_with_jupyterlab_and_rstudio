@@ -1,11 +1,11 @@
 # DataAI — DeepSeek Harness (DSH) 后端接入（dsh-tui）
 
-DataAI 支持两个**并列**的 agent 后端，在终端窗口直接启动、无需 wrapper：
+DataAI 支持两个**并列**的 agent 后端，在终端窗口直接启动（DSH 用 `dsh --profile dsh-tui`，可选自建 `dsh-tui`/`dst` 别名）：
 
 | 后端 | 启动命令 | 定位 |
 |---|---|---|
 | **OpenClaw**（默认） | `openclaw chat` | 嵌入模式、`baidu-search` skill、`agent-browser` 等专属工具 |
-| **DeepSeek Harness / DSH** | `dsh-tui` | DeepSeek 原生 harness、信创、国产模型直连 |
+| **DeepSeek Harness / DSH** | `dsh --profile dsh-tui`（别名 `dsh-tui`/`dst`） | DeepSeek 原生 harness、信创、国产模型直连 |
 
 二者共用同一对 MCP Server（`jupyter-mcp` + `r-session`）。在 RStudio 或 JupyterLab 里开一个终端窗口，跑对应命令即可。
 
@@ -17,21 +17,27 @@ DataAI 支持两个**并列**的 agent 后端，在终端窗口直接启动、�
 
 ## 2. 前提
 
-- Node.js（实测 v24）+ **pnpm**（`dsh-tui` 首次启动自举 profile 需要）。
+- Node.js（实测 v24）+ **pnpm**（`dsh plugin add` 安装 profile 需要）。
 - Python：含 `mcp`、`httpx` 的环境（本仓库 MCP server 的 shebang 指向 graphrag conda env）。
 - R（`httpuv`、`jsonlite`）+ RStudio Server。
 
 ## 3. 安装 DSH
 
 ```bash
-sudo npm install -g @deepseek-ai/dsh @deepseek-harness-tui/dsh-tui
+# ① 安装 DSH CLI（`dsh` 命令本身）
+sudo npm install -g @deepseek-ai/dsh
+
+# ② 以 plugin 方式安装 dsh-tui（避免全局安装时的包依赖冲突）
+dsh plugin --profile dsh-tui add @deepseek-harness-tui/dsh-tui@0.11.1
 ```
 
-首次运行 `dsh-tui` 会自动初始化 `~/.dsh/profiles/dsh-tui/`（内部等价 `dsh plugin --profile dsh-tui add @deepseek-harness-tui/dsh-tui`）。
+`dsh plugin add` 会初始化 `~/.dsh/profiles/dsh-tui/`（生成 `package.json` / `cordis.yml` / 空的 `cordis.patch.yml`），并把包 hard-link 进 profile 的 `node_modules`。
+
+> ⚠️ plugin 方式**不会**生成独立的 `dsh-tui` 二进制，启动用 `dsh --profile dsh-tui`（见 §6）。不要 `npm install -g @deepseek-harness-tui/dsh-tui`——会把整套依赖平铺进全局，易与其它全局包冲突。
 
 ## 4. 配置（`~/.dsh/`）
 
-先跑一次 `dsh-tui` 让 profile 自举，再填下面三份配置：
+`dsh plugin add`（§3）已初始化 profile（生成 `package.json` / `cordis.yml` / 空的 `cordis.patch.yml`），直接填下面三份配置：
 
 ### ① profile patch（模型 + 两个 MCP server）
 
@@ -40,7 +46,7 @@ sudo npm install -g @deepseek-ai/dsh @deepseek-harness-tui/dsh-tui
 cp dsh/profiles/dsh-tui/cordis.patch.yml.template ~/.dsh/profiles/dsh-tui/cordis.patch.yml
 ```
 
-> `package.json` / `cordis.yml` 由 `dsh-tui` 自举自动生成，无需手动拷贝（仓库 `dsh/profiles/dsh-tui/` 里那份仅作结构参考）。
+> `package.json` / `cordis.yml` 已由 `dsh plugin add` 自动生成，无需手动拷贝（仓库 `dsh/profiles/dsh-tui/` 里那份仅作结构参考）。
 
 ### ② 凭证（填入真实 key，chmod 600）
 
@@ -85,9 +91,22 @@ source("r-session-ai/r-session-api.R")
 # OpenClaw
 openclaw chat
 
-# DSH（等价 dsh --profile dsh-tui；短别名 dst）
-dsh-tui
+# DSH（plugin 安装无独立二进制，用 profile 启动）
+dsh --profile dsh-tui
 ```
+
+plugin 方式没有 `dsh-tui` 命令，可自建别名方便敲（`~/.local/bin` 已在 PATH）：
+
+```bash
+cat > ~/.local/bin/dsh-tui <<'EOF'
+#!/usr/bin/env bash
+exec dsh --profile dsh-tui "$@"
+EOF
+chmod +x ~/.local/bin/dsh-tui
+ln -sf dsh-tui ~/.local/bin/dst    # dst = 短别名
+```
+
+此后直接 `dsh-tui` 或 `dst`。
 
 ## 7. 验证
 
@@ -96,7 +115,7 @@ dsh-tui
 dsh --profile dsh-tui --dump-config
 
 # 进 TUI 后应能调 mcp__jupyter-mcp__run_code 执行 Python、mcp__r-session__run_code 执行 R
-dsh-tui
+dsh --profile dsh-tui    # 或别名 dsh-tui / dst
 ```
 
 DSH 下 MCP 工具名为 `mcp__jupyter-mcp__*` / `mcp__r-session__*`（比 OpenClaw 多 `mcp__` 前缀）。
