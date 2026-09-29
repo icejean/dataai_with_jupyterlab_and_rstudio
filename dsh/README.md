@@ -65,7 +65,7 @@ cp dsh/AGENTS.md ~/.dsh/AGENTS.md
 
 | 占位符 | 说明 | 示例 |
 |---|---|---|
-| `<REPO_PATH>` | DataAI 仓库绝对路径 | `/home/ubuntu/openclaw_with_jupyterlab_and_rstudio` |
+| `<REPO_PATH>` | DataAI 仓库绝对路径 | `/home/ubuntu/dataai_with_jupyterlab_and_rstudio` |
 | `<PYTHON>` | 含 mcp/httpx 的 Python | `/usr/lib64/anaconda3/envs/graphrag/bin/python3` |
 | `<R_API_PORT>` | R API 端口（与 RStudio 里 `options(rsession_api_port=...)` 一致） | `"8226"`（**保留引号**） |
 | `<R_API_TOKEN>` | R API token（与 `options(rsession_api_token=...)` 一致） | 用 `secrets.token_urlsafe(24)` 生成 |

@@ -29,7 +29,7 @@ DataAI 当前跑在 **OpenClaw** 上，DeepSeek 作为模型（`openai-completio
 `~/.openclaw/` 下已有一套场景切换机制：
 - `switch-config.sh <target-json>`：停 gateway → cp 目标 json → 同步 `.bak`/清 `.last-good`/删 sqlite last-known-good。
 - 场景文件：`openclaw.dataai.json` / `openclaw.portal.json`；记忆：`MEMORY.DataAI.md` / `MEMORY.Portal.md`（`~/.openclaw/workspace/` 下）。
-- 当前 DataAI 场景：MCP 指向仓库源码（`~/openclaw_with_jupyterlab_and_rstudio/...`），R 端口 8226。
+- 当前 DataAI 场景：MCP 指向仓库源码（`~/dataai_with_jupyterlab_and_rstudio/...`），R 端口 8226。
 
 ### 2.3 DSH 现状（已装）
 `~/.dsh/` 已就绪：`settings.yaml`（`llm-pi-ai:` 多 provider）、`.credentials.yaml`、`AGENTS.md`（persona，user-global）。**两个 profile 并存**：
@@ -58,7 +58,7 @@ DSH (dsh-tui，交互式 TUI)
 
 ## 5. 交付物
 
-### 5.1 仓库新增（`~/openclaw_with_jupyterlab_and_rstudio/`）
+### 5.1 仓库新增（`~/dataai_with_jupyterlab_and_rstudio/`）
 ```
 dsh/
 ├── README.md                          # DSH(dsh-tui) 接入说明（安装/配置/启动/验证）
@@ -100,7 +100,7 @@ docs/dsh-backend-spec.md               # 本文档
         serverName: jupyter-mcp
         transport: stdio
         command: /usr/lib64/anaconda3/envs/graphrag/bin/python
-        args: [/home/ubuntu/openclaw_with_jupyterlab_and_rstudio/jupyter_mcp/jupyter-mcp-server.py]
+        args: [/home/ubuntu/dataai_with_jupyterlab_and_rstudio/jupyter_mcp/jupyter-mcp-server.py]
         env: { R2PY_SHARED_DIR: "<HOME>/.dsh/workspace/r2py", JUPYTER_MCP_TIMEOUT: "300" }   # 见 6.4/6.6
         toolCallTimeoutMs: 300000
 
@@ -112,7 +112,7 @@ docs/dsh-backend-spec.md               # 本文档
         serverName: r-session
         transport: stdio
         command: /usr/lib64/anaconda3/envs/graphrag/bin/python
-        args: [/home/ubuntu/openclaw_with_jupyterlab_and_rstudio/r-session-ai/r-session-mcp-server.py]
+        args: [/home/ubuntu/dataai_with_jupyterlab_and_rstudio/r-session-ai/r-session-mcp-server.py]
         # env 透传已支持（见 6.3；R_API_TOKEN 必须显式写在 env 里）
         env: { R_API_HOST: 127.0.0.1, R_API_PORT: "8226", R_API_TOKEN: "<TOKEN>", R_API_TIMEOUT: "300", R2PY_SHARED_DIR: "<HOME>/.dsh/workspace/r2py" }
         toolCallTimeoutMs: 300000
