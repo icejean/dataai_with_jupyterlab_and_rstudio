@@ -30,6 +30,7 @@ from typing import Any
 
 R_API_HOST = os.environ.get("R_API_HOST", "127.0.0.1")
 R_API_PORT = int(os.environ.get("R_API_PORT", "8161"))
+R_API_TIMEOUT = float(os.environ.get("R_API_TIMEOUT", "30"))
 R_API_BASE = f"http://{R_API_HOST}:{R_API_PORT}"
 
 logging.basicConfig(
@@ -64,7 +65,7 @@ os.environ.pop("https_proxy", None)
 _client_headers = {}
 if R_API_TOKEN:
     _client_headers["Authorization"] = f"Bearer {R_API_TOKEN}"
-_client = httpx.Client(base_url=R_API_BASE, timeout=30.0, headers=_client_headers)
+_client = httpx.Client(base_url=R_API_BASE, timeout=R_API_TIMEOUT, headers=_client_headers)
 
 
 def rpc_get(path: str) -> dict:

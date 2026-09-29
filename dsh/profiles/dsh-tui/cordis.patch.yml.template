@@ -1,0 +1,47 @@
+# DataAI DSH profile patch —— 复制到 ~/.dsh/profiles/dsh-tui/cordis.patch.yml 并替换占位符。
+# 占位符：
+#   <REPO_PATH>    DataAI 仓库绝对路径（克隆到本机的目录）
+#   <PYTHON>       含 mcp / httpx 的 Python（本仓库 MCP server 的 shebang 指向 graphrag conda env）
+#   <R_API_PORT>   R API 端口（须与 RStudio 里 options(rsession_api_port=...) 一致）
+#   <R_API_TOKEN>  R API token（须与 options(rsession_api_token=...) 一致）
+#   <HOME>         家目录绝对路径（R2PY_SHARED_DIR 用；`~` 不会被 MCP server 展开，必须写绝对路径）
+# 模型 + MCP server 配置，patch 叠加在 dsh-base / dsh-tui bundle 层之上。
+
+# 模型：DeepSeek 官方（默认 deepseek-v4-flash；多 provider 见 README「多 provider」）
+- id: agent-default-model
+  config:
+    provider: deepseek-official
+    model: deepseek-v4-flash
+
+# MCP：jupyter-mcp（stdio），工具名 mcp__jupyter-mcp__*
+- insert:
+    - id: mcp-jupyter-mcp
+      name: '@deepseek-ai/dsh-mcp-client'
+      config:
+        serverName: jupyter-mcp
+        transport: stdio
+        command: <PYTHON>
+        args:
+          - <REPO_PATH>/jupyter_mcp/jupyter-mcp-server.py
+        env:
+          R2PY_SHARED_DIR: <HOME>/.dsh/workspace/r2py
+          JUPYTER_MCP_TIMEOUT: "300"   # 与 toolCallTimeoutMs 对齐（服务端执行上限 ≤ 客户端超时）
+        toolCallTimeoutMs: 300000   # 默认 60s，长 ML 训练需调大
+
+# MCP：r-session（stdio），工具名 mcp__r-session__*
+- insert:
+    - id: mcp-r-session
+      name: '@deepseek-ai/dsh-mcp-client'
+      config:
+        serverName: r-session
+        transport: stdio
+        command: <PYTHON>
+        args:
+          - <REPO_PATH>/r-session-ai/r-session-mcp-server.py
+        env:
+          R_API_HOST: 127.0.0.1
+          R_API_PORT: "<R_API_PORT>"      # 保留引号，端口须为字符串
+          R_API_TOKEN: <R_API_TOKEN>      # 必须显式写在此处：父 env 会清洗 TOKEN 类变量
+          R_API_TIMEOUT: "300"            # 桥 httpx 超时（默认 30s），长 R 任务调大，须 ≤ toolCallTimeoutMs
+          R2PY_SHARED_DIR: <HOME>/.dsh/workspace/r2py
+        toolCallTimeoutMs: 300000

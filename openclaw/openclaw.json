@@ -187,12 +187,12 @@
       "r-session": {
         "command": "/usr/lib64/anaconda3/envs/graphrag/bin/python3",
         "args": [
-          "/home/ubuntu/.openclaw/workspace/r-session-ai/r-session-mcp-server.py"
+          "/home/ubuntu/openclaw_with_jupyterlab_and_rstudio/r-session-ai/r-session-mcp-server.py"
         ],
         "env": {
           "R_API_HOST": "127.0.0.1",
           "R_API_PORT": "8226",
-	  "R_API_TOKEN": "xxxxxxxxxxxxxxxxxxxxx",
+	  "R_API_TOKEN": "xxxxxxxxxxxx",
           "NO_PROXY": "127.0.0.1,localhost",
           "no_proxy": "127.0.0.1,localhost"
         }
@@ -200,7 +200,7 @@
       "jupyter-mcp": {
         "command": "/usr/lib64/anaconda3/envs/graphrag/bin/python3",
         "args": [
-          "/home/ubuntu/.openclaw/workspace/jupyter_mcp/jupyter-mcp-server.py"
+          "/home/ubuntu/openclaw_with_jupyterlab_and_rstudio/jupyter_mcp/jupyter-mcp-server.py"
         ]
       }
     }

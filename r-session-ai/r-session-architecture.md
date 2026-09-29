@@ -312,6 +312,7 @@ server <- startServer(HOST, PORT, app)
 |-------------------|----------------------|----------------------------------|
 | `R_API_HOST`      | `127.0.0.1`          | R API 地址                       |
 | `R_API_PORT`      | `8161`               | R API 端口                       |
+| `R_API_TIMEOUT`   | `30`                 | httpx 客户端超时（秒），长任务调大 |
 | `R_API_TOKEN`     | 空                   | Bearer Token（空=不启用）        |
 | `MCP_PORT`        | `0`                  | MCP 服务器端口（`0`=stdio 模式） |
 | `R2PY_SHARED_DIR` | `~/workspace/r2py/`  | R↔Python 数据交换目录            |

@@ -194,10 +194,11 @@ openclaw_with_jupyterlab_and_rstudio/
 │
 ├── .gitignore
 ├── LICENSE                          # MIT License
-├── MEMORY.md                        # ⚠️ OpenClaw AI Agent long-term memory sample
-│                                    #    Tells the AI how to drive this environment
-│                                    #    Replace with your own config after cloning
-├── openclaw.json                    # ⚠️ OpenClaw sample configuration
+├── openclaw/
+│   ├── MEMORY.md                    # ⚠️ OpenClaw AI Agent long-term memory sample
+│   │                                #    Tells the AI how to drive this environment
+│   │                                #    Replace with your own config after cloning
+│   └── openclaw.json                # ⚠️ OpenClaw sample configuration
 │                                    #    MCP Server / tool registration config
 │                                    #    Includes jupyter-mcp, r-session connection params
 │                                    #    Modify for your own environment after cloning
@@ -462,8 +463,8 @@ Restart JupyterLab after installation for changes to take effect. For JupyterHub
 1.  **Start the environment:** Open JupyterLab and RStudio
 2.  **Register Python side:** Run `hook.register()` in a Jupyter cell
 3.  **Start R API:** Run `source("r-session-ai/r-session-api.R")` in RStudio Console
-4.  **Configure OpenClaw:** Modify MCP Server parameters in `openclaw.json` for your environment
-5.  **Configure MEMORY.md:** Adapt `MEMORY.md` to your environment
+4.  **Configure OpenClaw:** Modify MCP Server parameters in `openclaw/openclaw.json` for your environment
+5.  **Configure MEMORY.md:** Adapt `openclaw/MEMORY.md` to your environment
 6.  **Configure Claude Code (recommended):** Claude can access domestic LLMs, works well with OpenClaw
 7.  **Start analyzing:** Give commands to OpenClaw via conversation
 

@@ -12,6 +12,7 @@ venv/
 # Jupyter
 .ipynb_checkpoints/
 *.ipynb
+!test.ipynb
 
 # Conda
 *.egg-info/
