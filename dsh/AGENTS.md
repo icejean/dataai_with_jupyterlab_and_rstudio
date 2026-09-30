@@ -363,12 +363,14 @@ R 侧是 `42.549999237060546875`，Python 侧是 `42.55`，单值最大相对差
 ### ⚠️ 长输出超限 → 用 `run_with_sink.R` 落盘
 
 R API 输出超过上限会截断（默认 2000 行，可用环境变量 `R_SESSION_OUTPUT_LINE_LIMIT` 调）。
-需要完整结果时，用 `R/run_with_sink.R` 落盘再用 read 读（`run_with_sink.R` 须 `echo = FALSE` 调用，否则 source 回显会混进结果文件、行号整体偏移）：
+需要完整结果时，用 `R/run_with_sink.R` 定义 `run_with_sink(src, out)` 函数落盘，再用 read 读：
 
 ```r
-SRC <- "/home/ubuntu/.dsh/workspace/R/analyze_shanghai_housing.R"
-OUT <- "/home/ubuntu/.dsh/workspace/R/analyze_output.txt"
-source("/home/ubuntu/.dsh/workspace/R/run_with_sink.R", echo = FALSE)
+source("/home/ubuntu/.dsh/workspace/R/run_with_sink.R")   # 定义函数（不要 echo=TRUE）
+run_with_sink("/home/ubuntu/.dsh/workspace/R/analyze_shanghai_housing.R")
+# 或显式指定输出文件：
+run_with_sink("/home/ubuntu/.dsh/workspace/R/analyze_shanghai_housing.R",
+              "/home/ubuntu/.dsh/workspace/R/analyze_output.txt")
 ```
 
 > **已修复（2026.9.30，commit `c0737a3`）：** 早前 R API 的「200 行硬截断 + 报错误报成功/丢输出」

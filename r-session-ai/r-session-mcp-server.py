@@ -171,11 +171,6 @@ TOOLS = [
                     "type": "string",
                     "description": "要执行的 R 代码，用分号或换行分隔多条语句",
                 },
-                "quiet": {
-                    "type": "boolean",
-                    "description": "是否静默执行（不在 Console 打印输出）",
-                    "default": False,
-                },
             },
             "required": ["code"],
         },
@@ -330,9 +325,7 @@ async def handle_call_tool(
 
         elif name == "run_code":
             code = arguments["code"]
-            quiet = arguments.get("quiet", False)
-            endpoint = "/eval/quiet" if quiet else "/eval"
-            data = rpc_post(endpoint, {"code": code})
+            data = rpc_post("/eval", {"code": code})
 
             inner = data.get("data") or {}
             lines = []
@@ -345,7 +338,7 @@ async def handle_call_tool(
 
             # 输出（成功/失败都要展示！报错前的输出对定位问题至关重要）
             output = _as_list(inner.get("output"))
-            if output and not quiet:
+            if output:
                 total = len(output)
                 truncated = total > OUTPUT_LINE_LIMIT
                 if truncated:
