@@ -1,5 +1,9 @@
 # DataAI Portal 简介
 
+## [关于DataAI Portal产品规划的深入讨论](https://zhuanlan.zhihu.com/p/2087571284871877472)
+
+我计划尝试一下看看DataAI Portal能不能商业化运作，本篇是让感兴趣的投资人、大小厂商和潜在用户从技术、市场、用户等各个维度了解DataAI Portal的潜力和可能性，欢迎有兴趣的投资人、大小厂商和潜在用户了解、试用、合作、投资和收购。DataAI Portal进化的方向一是增加指标层和报表层，以及从自由探索…
+
 ## [Ubuntu 24 x86_64 架构 DataAI Portal 离线部署测试](https://zhuanlan.zhihu.com/p/2086394488541529038)
 
 测试服务器是联想 Y9000-X 笔记本，Windows10+WSL2+Ubuntu 24，16核 24G RAM，Nvidia GeForce RTX 2060 Max-Q 6G 显存。用在线下载安装包，…
