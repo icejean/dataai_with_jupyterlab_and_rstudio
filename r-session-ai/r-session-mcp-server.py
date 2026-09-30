@@ -361,10 +361,11 @@ async def handle_call_tool(
             if new_objs:
                 lines.append(f"\n📦 新/变更对象: {', '.join(new_objs)}")
 
-            # 返回值
+            # 返回值：list 型只写 result_str 不写 result，闸门必须同时认两者，
+            # 否则 t.test/lm/list(...) 等统计检验结果会被静默丢弃（见 issue-r-session-list-result-dropped）
             result = inner.get("result")
-            if result is not None:
-                result_str = _as_list(inner.get("result_str"))
+            result_str = _as_list(inner.get("result_str"))
+            if result is not None or result_str:
                 if result_str:
                     lines.append("\n🔙 返回值:")
                     for line in result_str:

@@ -24,7 +24,8 @@ if (!is.na(env_port)) {
 }
 options(rsession_api_host = "127.0.0.1")    # 仅本地访问
 options(rsession_api_max_rows = 100)        # 预览数据最大行数
-options(rsession_api_max_str = 20)          # str 截断层级
+options(rsession_api_max_str = 20)          # str 深度上限（max.level）
+options(rsession_api_max_str_len = 8)       # str 宽度上限（vec.len / list.len，防止 ggproto/S7/R6 逐元素展开成 context 炸弹）
 # API Token 认证
 # 优先级：R选项 rsession_api_token > 环境变量 R_API_TOKEN > 空（不启用）
 API_TOKEN <- getOption("rsession_api_token", Sys.getenv("R_API_TOKEN", unset = ""))
@@ -142,10 +143,14 @@ safe_eval <- function(code, env = .GlobalEnv, console_echo = TRUE) {
   )
 }
 
-# str 截断
+# str 截断（深度 + 宽度双重上限）
 safe_str <- function(obj) {
+  w <- getOption("rsession_api_max_str_len")
   capture.output(str(obj,
     max.level = getOption("rsession_api_max_str"),
+    vec.len   = w,
+    list.len  = w,
+    nchar.max = 64,
     give.attr = FALSE
   ))
 }
