@@ -51,6 +51,29 @@ logging.basicConfig(
 )
 log = logging.getLogger(__name__)
 
+# marker：内省代码用它把「噪声」与「结构化 JSON 载荷」分隔开。
+_MARKER = "__JUPYTER_MCP_JSON__"
+
+
+def parse_marker_payload(all_text: str):
+    """定位 marker 并解析其后的第一个 JSON 值；尾随文本（stderr 警告等）自动忽略。
+
+    返回 (obj, None) 或 (None, 错误描述)。之前用 ``"\\n".join(lines[i+1:])`` 把
+    marker 之后的所有行都当成 JSON 正文，一旦 payload 之后跟了 stderr 警告
+    （如 numpy.core 改名触发的 DeprecationWarning），json.loads 就会报
+    ``Extra data``。改用 raw_decode 只消费第一个完整 JSON 值，天然免疫尾随噪声。
+    """
+    idx = all_text.find(_MARKER)
+    if idx < 0:
+        return None, "未找到输出"
+    rest = all_text[idx + len(_MARKER):].lstrip()
+    try:
+        obj, _ = json.JSONDecoder().raw_decode(rest)
+    except json.JSONDecodeError as e:
+        return None, f"marker 后 JSON 解析失败: {e} | 片段: {rest[:200]!r}"
+    return obj, None
+
+
 # ── Jupyter Kernel 连接管理 ────────────────────────────────────────────────
 
 
@@ -261,17 +284,10 @@ print(json.dumps(_inspect_objects(), default=str, ensure_ascii=False))
             # 先拼接全部输出再定位 marker：kernel 可能把 marker 和 payload 拆成
             # 两条 IOPub stream 消息（marker 先冲刷、payload 后到），逐条 out 查找会取到空串。
             all_text = "".join(out.get("text", "") for out in result.get("output", []))
-            lines = all_text.strip().split("\n")
-            for i, line in enumerate(lines):
-                if line.strip() == "__JUPYTER_MCP_JSON__":
-                    json_str = "\n".join(lines[i+1:])
-                    try:
-                        objs = json.loads(json_str)
-                        return {"success": True, "objects": objs, "count": len(objs)}
-                    except json.JSONDecodeError as e:
-                        return {"success": False,
-                                "error": f"marker 后 JSON 解析失败: {e} | 片段: {json_str[:200]!r}"}
-            return {"success": False, "error": "未找到输出"}
+            objs, err = parse_marker_payload(all_text)
+            if err is not None:
+                return {"success": False, "error": err}
+            return {"success": True, "objects": objs, "count": len(objs)}
         return {"success": False, "error": str(result.get("error", "未知错误"))}
 
     def preview_object(self, name: str) -> dict:
@@ -344,17 +360,10 @@ print(json.dumps(_info, default=str, ensure_ascii=False))
         if result["success"]:
             # 先拼接全部输出再定位 marker（marker 与 payload 可能分属两条 IOPub 消息）。
             all_text = "".join(out.get("text", "") for out in result.get("output", []))
-            lines = all_text.strip().split("\n")
-            for i, line in enumerate(lines):
-                if line.strip() == "__JUPYTER_MCP_JSON__":
-                    json_str = "\n".join(lines[i+1:])
-                    try:
-                        info = json.loads(json_str)
-                        return {"success": True, "data": info}
-                    except json.JSONDecodeError as e:
-                        return {"success": False,
-                                "error": f"marker 后 JSON 解析失败: {e} | 片段: {json_str[:200]!r}"}
-            return {"success": False, "error": "未找到输出"}
+            info, err = parse_marker_payload(all_text)
+            if err is not None:
+                return {"success": False, "error": err}
+            return {"success": True, "data": info}
         return {"success": False, "error": str(result.get("error", "无法预览对象"))}
 
     def get_loaded_packages(self) -> dict:
@@ -379,17 +388,10 @@ print(json.dumps({pkg: _safe_version(mod) for pkg, mod in pkgs.items()}, ensure_
         if result["success"]:
             # 先拼接全部输出再定位 marker（marker 与 payload 可能分属两条 IOPub 消息）。
             all_text = "".join(out.get("text", "") for out in result.get("output", []))
-            lines = all_text.strip().split("\n")
-            for i, line in enumerate(lines):
-                if line.strip() == "__JUPYTER_MCP_JSON__":
-                    json_str = "\n".join(lines[i+1:])
-                    try:
-                        pkgs = json.loads(json_str)
-                        return {"success": True, "packages": pkgs, "count": len(pkgs)}
-                    except json.JSONDecodeError as e:
-                        return {"success": False,
-                                "error": f"marker 后 JSON 解析失败: {e} | 片段: {json_str[:200]!r}"}
-            return {"success": False, "error": "未找到输出"}
+            pkgs, err = parse_marker_payload(all_text)
+            if err is not None:
+                return {"success": False, "error": err}
+            return {"success": True, "packages": pkgs, "count": len(pkgs)}
         return {"success": False, "error": str(result.get("error", "无法获取包列表"))}
 
     def health(self) -> dict:
