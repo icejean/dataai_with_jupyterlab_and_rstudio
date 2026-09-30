@@ -245,10 +245,15 @@ matplotlib.rcParams['axes.unicode_minus'] = False       # 解决负号显示问�
 
 ### 可见模式（Console 回显）
 - **目标**：让用户在 RStudio Console 中看到执行的源码和输出
-- **方法**：先把 R 代码写入 `.R` 文件（放在 `~/.dsh/workspace/R/` 子目录），然后用 `source("R/xxx.R", echo = TRUE)` 执行
+- **方法**：先把 R 代码写入 `.R` 文件（放在 `~/.dsh/workspace/R/` 子目录），然后用**绝对路径**执行——R 的工作目录是仓库根，`source("R/xxx.R")` 相对路径会报「无法打开文件」：
+  ```r
+  WS <- "/home/ubuntu/.dsh/workspace"
+  source(file.path(WS, "R/xxx.R"), echo = TRUE)
+  ```
 - R 相关的所有 .R 文件、中间数据文件等均放入 `R/` 子目录管理
 - R API 中 `safe_eval()` 的 `console_echo` 参数控制是否回显到 Console
 - 绘图用 `source(echo = TRUE)` 也能正常渲染到 RStudio Plots 面板
+- **⚠️ `run_code` 裸表达式不回显**：`eval()` 不做 Console 自动打印，`run_code('getwd()')` 只回「✅ 执行成功」。必须用 `cat()`/`print()` 显式输出；多行分析走 `source(..., echo=TRUE)`（此时 `print.eval` 自动生效）。
 
 ### ⚠️ R 作图：回显 Plots 面板的正确姿势（2026.9.30 实测）
 
@@ -266,14 +271,14 @@ png("out.png");     print(p); dev.off()
 
 - `getOption("device")` 为 `"RStudioGD"` 时，`print(p)` 才会进 Plots 面板
 - 脚本开头建议 `graphics.off()` 清掉遗留的显式设备（否则 `dev.cur()` 可能仍是 `agg_png`）
-- 执行方式仍按可见模式：写入 `~/.dsh/workspace/R/xxx.R` 后 `source("R/xxx.R", echo = TRUE)`
+- 执行方式仍按可见模式：写入 `~/.dsh/workspace/R/xxx.R` 后 `source(file.path(WS, "R/xxx.R"), echo = TRUE)`
 
 ### ⚠️ R 作图：中文字体只能用 `SimSun`（2026.9.30 实测）
 
-**RStudioGD 设备上，`SimHei` / `黑体` 都解析不到，会静默回退成 `wqy-microhei` 并打印警告：**
+**RStudioGD 设备上，`SimHei` / `黑体` 都解析不到，会静默回退成 `sans` 并打印警告：**
 
 ```
-font family 'SimHei' not found, will use 'wqy-microhei' instead
+font family 'SimHei' not found, will use 'sans' instead
 ```
 
 实测各 family 在 RStudioGD 上的解析结果：
@@ -281,8 +286,8 @@ font family 'SimHei' not found, will use 'wqy-microhei' instead
 | family | RStudioGD 是否可解析 |
 |---|---|
 | **`SimSun`** | ✅ **可解析，无警告 —— 推荐** |
-| `sans` | ✅ |
-| `wqy-microhei` | ✅（RStudio 自带回退字体） |
+| `sans` | ✅（实际回退字体 → uming.ttc） |
+| `wqy-microhei` | ⚠️ 未实测（match_font 命中 ≠ 可渲染） |
 | `SimHei` / `黑体` / `simhei` / `Hei` | ❌ 回退 |
 | `SimSun`(中文名`宋体`) / `NSimSun` / `FangSong` / `KaiTi` | ❌ 回退 |
 | `Droid Sans Fallback` | ❌ 回退 |
@@ -290,6 +295,16 @@ font family 'SimHei' not found, will use 'wqy-microhei' instead
 > 原因：`simhei.ttf` 的**内部 family 名只有中文「黑体」**，RStudioGD 按内部 family 名匹配，
 > 而 `fc-match SimHei` 能命中只是 fontconfig 的别名机制——两者不是一回事。
 > `simsun.ttc` 内部 family 名是英文 `SimSun`，故可解析。
+>
+> **可靠判据（勿用 `fc-match` / `systemfonts::match_font()`，两者会假阳性）**——渲染期捕获 warning：
+> ```r
+> warns <- character()
+> png(tempfile(fileext = ".png"))
+> withCallingHandlers(print(p),
+>   warning = function(e) { warns <<- c(warns, conditionMessage(e)); invokeRestart("muffleWarning") })
+> dev.off()
+> sum(grepl("font family|not found", warns))   # 0 = 真在用
+> ```
 >
 > 这与上面 **Python 侧用 `SimHei`** 的结论不同：matplotlib 走 fontconfig/字体文件路径，
 > R 的 RStudioGD 走内部 family 名。**R 用 `SimSun`，Python 用 `SimHei`，不要混用。**
@@ -348,12 +363,12 @@ R 侧是 `42.549999237060546875`，Python 侧是 `42.55`，单值最大相对差
 ### ⚠️ 长输出超限 → 用 `run_with_sink.R` 落盘
 
 R API 输出超过上限会截断（默认 2000 行，可用环境变量 `R_SESSION_OUTPUT_LINE_LIMIT` 调）。
-需要完整结果时，用 `R/run_with_sink.R` 落盘再用 read 读：
+需要完整结果时，用 `R/run_with_sink.R` 落盘再用 read 读（`run_with_sink.R` 须 `echo = FALSE` 调用，否则 source 回显会混进结果文件、行号整体偏移）：
 
 ```r
 SRC <- "/home/ubuntu/.dsh/workspace/R/analyze_shanghai_housing.R"
 OUT <- "/home/ubuntu/.dsh/workspace/R/analyze_output.txt"
-source("R/run_with_sink.R", echo = TRUE)
+source("/home/ubuntu/.dsh/workspace/R/run_with_sink.R", echo = FALSE)
 ```
 
 > **已修复（2026.9.30，commit `c0737a3`）：** 早前 R API 的「200 行硬截断 + 报错误报成功/丢输出」
@@ -558,7 +573,7 @@ sales.to_csv("r2py/sales_export.csv", index=False)
 
 | 步骤 | R 端（Console 可见） | Python Notebook 端（Cell 可见） | Python .py + Console 端（Console 可见） |
 |---|---|---|---|
-| 执行分析代码 | `source("R/xxx.R", echo=TRUE)` | `run_code(...)` → 插 Cell | `run_code(...)` → console-adopt 显示 |
+| 执行分析代码 | `source(file.path(WS, "R/xxx.R"), echo=TRUE)` | `run_code(...)` → 插 Cell | `run_code(...)` → console-adopt 显示 |
 | **导出数据** | `fwrite()` 写在 `.R` 脚本中 | `df.to_csv()` 写在 `run_code` 里 | `df.to_csv()` 写在 `run_code` 里 |
 | **导入数据** | `fread()` 写在 `.R` 脚本中 | `pd.read_csv()` 写在 `run_code` 里 | `pd.read_csv()` 写在 `run_code` 里 |
 
