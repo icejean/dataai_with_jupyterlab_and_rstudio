@@ -8,6 +8,8 @@ output:
 
 > 让 AI 智能体像人一样在 Jupyter Lab 中做交互式数据分析
 
+> **后端无关：** 本文以 OpenClaw 作为 MCP 客户端示例；`jupyter-mcp` 是标准 MCP Server，DSH（DeepSeek Harness）同样可作为客户端，配置见 [dsh/README.md](../dsh/README.md)。
+
 ------------------------------------------------------------------------
 
 ## 一、整体架构

@@ -1,12 +1,12 @@
-# jupyter-mcp — Jupyter Lab ⟷ OpenClaw 数据分析桥接
+# jupyter-mcp — Jupyter Lab ⟷ AI 助手（OpenClaw / DSH）数据分析桥接
 
-让 OpenClaw 直接连接你在 Jupyter Lab 里的 Python kernel，辅助你进行 Python 数据分析。
+让 AI 助手（OpenClaw / DSH）直接连接你在 Jupyter Lab 里的 Python kernel，辅助你进行 Python 数据分析。
 
 ## 架构
 
 ```         
 ┌─────────────────┐     MCP 协议 (stdio)    ┌────────────────────────┐
-│   OpenClaw      │ ◄─────────────────────► │  jupyter-mcp-server.py │
+│   OpenClaw/DSH  │ ◄─────────────────────► │  jupyter-mcp-server.py │
 │   (AI 助理)     │    子进程 stdin/stdout  │  (MCP Server, Python)  │
 └─────────────────┘                         └───────────┬────────────┘
                                                         │ ZMQ (Jupyter 协议)
@@ -14,8 +14,8 @@
 ┌─────────────────────────────────────────────────────────┐
 │              Jupyter Lab（你的 kernel session）         │
 │  - 你正常在 Jupyter 里操作                              │
-│  - OpenClaw 能读取/修改同一个 kernel 中的变量           │
-│  - 你在 Jupyter 中看到的 DataFrame，OpenClaw 也能看到   │
+│  - AI 助手能读取/修改同一个 kernel 中的变量             │
+│  - 你在 Jupyter 中看到的 DataFrame，AI 助手也能看到     │
 └─────────────────────────────────────────────────────────┘
 ```
 
@@ -51,7 +51,7 @@ hook.register()
 
 如果需要切换到另一个 kernel，就在那个 kernel 的 cell 里重新运行 `hook.register(force=True)`。
 
-### 3. 在 OpenClaw 中配置 MCP Server（推荐：stdio 模式）
+### 3. 在 Agent 后端中配置 MCP Server（OpenClaw / DSH，推荐：stdio 模式）
 
 在 `openclaw.json` 的 `mcp.servers` 中添加：
 
@@ -75,7 +75,9 @@ hook.register()
 }
 ```
 
-配置完成后重启 OpenClaw 即可自动拉起 MCP Server。
+配置完成后重启 Agent 后端即可自动拉起 MCP Server。
+
+> **DSH 后端：** 同一 MCP Server 无需改动，可直接挂到 DSH —— 配置见 [dsh/README.md](../dsh/README.md)。
 
 说明：在多用户模式下，MCP Server的源码可以放在共享的目录中，所有用户对共享目录要有透传的读与执行的权限，这样便于集中管理源码的更新。
 共享MCP Server源码目录时，要包括已经生成的__pycache__目录下的cache文件，因为实际执行的是__pycache__里的文件。

@@ -8,6 +8,8 @@ output:
 
 > Empowering AI agents to perform interactive data analysis in Jupyter Lab, just like a human would
 
+> **Backend-agnostic:** This document uses OpenClaw as the example MCP client; `jupyter-mcp` is a standard MCP Server, so DSH (DeepSeek Harness) works as a client too — see [dsh/README.md](../dsh/README.md).
+
 ------------------------------------------------------------------------
 
 ## I. Overall Architecture

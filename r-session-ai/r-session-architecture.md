@@ -8,6 +8,8 @@ output:
 
 > 让 AI 代理直接操控 RStudio 的当前 R Session，读数据、做分析、写结果
 
+> **后端无关：** 本文以 OpenClaw 作为 MCP 客户端示例；`r-session` 是标准 MCP Server，DSH（DeepSeek Harness）同样可作为客户端，配置见 [dsh/README.md](../dsh/README.md)。
+
 ------------------------------------------------------------------------
 
 ## 一、整体架构

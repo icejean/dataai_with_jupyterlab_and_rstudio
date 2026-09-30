@@ -197,6 +197,11 @@ dataai_with_jupyterlab_and_rstudio/
 │   ├── Melbourne_housing_LGBM.py    #    LightGBM 训练与调优
 │   └── demo-*.png                   #    22 步手机截图
 │
+├── mcp-examples/                    # 连接示例三件套：最小可跑验证
+│   ├── r-session.R                  #    R 端：设 token/端口后 source r-session-api.R
+│   ├── test.py                      #    Python console 模式：hook.register()
+│   └── test.ipynb                   #    Notebook 模式：hook 注册 + pandas EDA 示例
+│
 ├── dsh/                             # DeepSeek Harness (DSH) 后端接入
 │   ├── README.md                    #    DSH 安装 / 配置 / 启动（dsh-tui）
 │   ├── AGENTS.md                    #    DSH persona（复制到 ~/.dsh/）
@@ -345,6 +350,8 @@ cd dataai_with_jupyterlab_and_rstudio
 | `jupyter_mcp/` | [README.md](./jupyter_mcp/README.md) | Jupyter MCP 安装与注册 |
 | `r-session-ai/` | [README.md](./r-session-ai/README.md) | R API 启动与 MCP 配置 |
 | `dsh/` | [README.md](./dsh/README.md) | DeepSeek Harness (DSH) 后端安装与配置 |
+
+> 最小可跑的连接验证脚本见 [`mcp-examples/`](./mcp-examples/)：`r-session.R`（R 端）、`test.py`（console 模式）、`test.ipynb`（Notebook 模式）。
 
 ### 推荐使用方式
 
@@ -495,6 +502,8 @@ jupyter labextension list
 5.  配置MEMORY.md：按自己的环境修改 `openclaw/MEMORY.md`
 6.  建议配置Claude Code，Claude可以接入国内LLM，适合配合OpenClaw使用
 7.  **开始分析：** 在 Agent 对话中发号施令
+
+> `mcp-examples/` 提供最小可跑连接验证三件套——`r-session.R`（R 端）、`test.py`（console 模式）、`test.ipynb`（Notebook 模式），对应上面第 2、3 步。
 
 ------------------------------------------------------------------------
 

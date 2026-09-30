@@ -1,12 +1,12 @@
-# jupyter-mcp — Jupyter Lab ⟷ OpenClaw Data Analysis Bridge
+# jupyter-mcp — Jupyter Lab ⟷ AI Agents (OpenClaw / DSH) Data Analysis Bridge
 
-Connect OpenClaw directly to your Python kernel in Jupyter Lab, enabling AI-assisted Python data analysis.
+Connect AI agents (OpenClaw / DSH) directly to your Python kernel in Jupyter Lab, enabling AI-assisted Python data analysis.
 
 ## Architecture
 
 ```
 ┌─────────────────┐     MCP Protocol (stdio)   ┌────────────────────────┐
-│   OpenClaw      │ ◄─────────────────────►     │  jupyter-mcp-server.py │
+│   OpenClaw/DSH  │ ◄─────────────────────►     │  jupyter-mcp-server.py │
 │   (AI Agent)    │    subprocess stdin/stdout  │  (MCP Server, Python)  │
 └─────────────────┘                             └───────────┬────────────┘
                                                             │ ZMQ (Jupyter Protocol)
@@ -14,8 +14,8 @@ Connect OpenClaw directly to your Python kernel in Jupyter Lab, enabling AI-assi
 ┌─────────────────────────────────────────────────────────────┐
 │              Jupyter Lab (your kernel session)              │
 │  - You work in Jupyter normally                             │
-│  - OpenClaw can read/modify variables in the same kernel    │
-│  - DataFrames you see in Jupyter, OpenClaw can see too      │
+│  - AI agents can read/modify variables in the same kernel   │
+│  - DataFrames you see in Jupyter, AI agents can see too     │
 └─────────────────────────────────────────────────────────────┘
 ```
 
@@ -51,7 +51,7 @@ The `~/.jupyter-mcp/current` file is written; the MCP Server uses it to find the
 
 To switch to a different kernel, run `hook.register(force=True)` in that kernel's cell.
 
-### 3. Configure MCP Server in OpenClaw (Recommended: stdio mode)
+### 3. Configure MCP Server in the Agent Backend (OpenClaw / DSH, Recommended: stdio mode)
 
 Add this to the `mcp.servers` section of your `openclaw.json`:
 
@@ -75,7 +75,9 @@ Add this to the `mcp.servers` section of your `openclaw.json`:
 }
 ```
 
-Once configured, restart OpenClaw to automatically start the MCP Server.
+Once configured, restart the agent backend to automatically start the MCP Server.
+
+> **DSH backend:** The same MCP Server works with DSH unchanged — see [dsh/README.md](../dsh/README.md).
 
 > **Note for multi-user environments:** The MCP Server source code can be placed in a shared directory accessible to all users, with read and execute permissions, making it easier to centrally manage source updates. When sharing the MCP Server source directory, include the existing `__pycache__` directory and its compiled cache files, since Python actually executes the cached files in `__pycache__`.
 

@@ -8,6 +8,8 @@ output:
 
 > Empowering AI agents to directly control RStudio's current R Session — read data, perform analysis, write results
 
+> **Backend-agnostic:** This document uses OpenClaw as the example MCP client; `r-session` is a standard MCP Server, so DSH (DeepSeek Harness) works as a client too — see [dsh/README.md](../dsh/README.md).
+
 ------------------------------------------------------------------------
 
 ## I. Overall Architecture

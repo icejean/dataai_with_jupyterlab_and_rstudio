@@ -198,6 +198,11 @@ dataai_with_jupyterlab_and_rstudio/
 │   ├── Melbourne_housing_LGBM.py    #    LightGBM training & tuning
 │   └── demo-*.png                   #    22-step mobile screenshots
 │
+├── mcp-examples/                    # Connection examples: three minimal runnable scripts
+│   ├── r-session.R                  #    R side: set token/port then source r-session-api.R
+│   ├── test.py                      #    Python console mode: hook.register()
+│   └── test.ipynb                   #    Notebook mode: hook registration + pandas EDA
+│
 ├── dsh/                             # DeepSeek Harness (DSH) backend integration
 │   ├── README.md                    #    DSH install / config / launch (dsh-tui)
 │   ├── AGENTS.md                    #    DSH persona (copy to ~/.dsh/)
@@ -348,6 +353,8 @@ Subdirectory deployment guides:
 | `r-session-ai/` | [README.en.md](./r-session-ai/README.en.md) | R API startup & MCP config |
 | `dsh/` | [README.md](./dsh/README.md) | DeepSeek Harness (DSH) backend install & config |
 
+> Minimal runnable connection-verification scripts: [`mcp-examples/`](./mcp-examples/) — `r-session.R` (R side), `test.py` (console mode), `test.ipynb` (Notebook mode).
+
 ### Recommended Usage
 
 #### 1. Agent Backend Choice (OpenClaw / DSH)
@@ -495,6 +502,8 @@ Restart JupyterLab after installation for changes to take effect. For JupyterHub
 5.  **Configure MEMORY.md:** Adapt `openclaw/MEMORY.md` to your environment
 6.  **Configure Claude Code (recommended):** Claude can access domestic LLMs, works well with OpenClaw
 7.  **Start analyzing:** Give commands to the agent via conversation
+
+> `mcp-examples/` provides three minimal connection-verification scripts — `r-session.R` (R side), `test.py` (console mode), `test.ipynb` (Notebook mode) — mapping to steps 2 and 3 above.
 
 ------------------------------------------------------------------------
 

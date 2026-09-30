@@ -53,7 +53,7 @@ Run inside RStudio Server, allowing AI agents (OpenClaw / Claude Desktop / any M
 - **Writable**: `POST /eval` code executes directly in `.GlobalEnv`
 - **Local only**: Listens on `127.0.0.1`, data never leaves the server
 - **Token authentication**: All API requests must carry a Bearer Token to prevent unauthorized access
-- **Model agnostic**: Model choice is controlled by OpenClaw; any model (local or domestic) can be used
+- **Model agnostic**: Model choice is controlled by the agent backend (OpenClaw / DSH); any model (local or domestic) can be used
 
 ------------------------------------------------------------------------
 
@@ -92,7 +92,7 @@ You'll see:
 
 The Console remains usable for normal R operations.
 
-### 3. Configure MCP Server in OpenClaw (Recommended: stdio mode)
+### 3. Configure MCP Server in the Agent Backend (OpenClaw / DSH, Recommended: stdio mode)
 
 Add this to the `mcp.servers` section of your `openclaw.json`:
 
@@ -126,7 +126,9 @@ Add this to the `mcp.servers` section of your `openclaw.json`:
 }
 ```
 
-Restart OpenClaw after configuration to automatically start the MCP Server.
+Restart the agent backend after configuration to automatically start the MCP Server.
+
+> **DSH backend:** The same MCP Server works with DSH unchanged — see [dsh/README.md](../dsh/README.md).
 
 ### 4. Install Python Dependencies (MCP Server side)
 
@@ -198,7 +200,7 @@ options(rsession_api_token = "token-for-user-c")
 source("r-session-ai/r-session-api.R")
 ```
 
-### OpenClaw Configuration (one per user)
+### Agent Backend Configuration (OpenClaw / DSH, one per user)
 
 Each user configures their own `openclaw.json` with matching port and Token:
 
@@ -274,7 +276,7 @@ options(rsession_api_token = "my-strong-token-abc123")
 Sys.setenv(R_API_TOKEN = "my-strong-token-abc123")
 ```
 
-**2. Configure the same Token in OpenClaw:**
+**2. Configure the same Token in the agent backend:**
 
 In your `openclaw.json` `env` field, use the same Token:
 

@@ -6,9 +6,9 @@ output:
 
 # Data AI 信创合规技术白皮书
 
-## OpenClaw + JupyterLab + RStudio 一体化数据分析平台
+## OpenClaw / DSH + JupyterLab + RStudio 一体化AI数据分析平台
 
-> **版本：v1.1 \| 日期：2026-06-24**
+> **版本：v1.2 \| 日期：2026-09-30**
 
 ------------------------------------------------------------------------
 
@@ -16,7 +16,7 @@ output:
 
 ### 1.1 方案定位
 
-Data AI 是一套以 AI Agent 为大脑、Python + R 双语言交互式分析引擎为执行体的一体化数据分析平台。通过 OpenClaw 连接 LLM（大型语言模型），以 MCP 协议统一调度 JupyterLab 和 RStudio，数据在浏览器界面中完成全流程分析，无需离开内网环境。
+Data AI 是一套以 AI Agent 为大脑、Python + R 双语言交互式分析引擎为执行体的一体化AI数据分析平台。通过 OpenClaw 或 DSH（DeepSeek Harness，DeepSeek 官方国产原生 harness）连接 LLM（大型语言模型），以 MCP 协议统一调度 JupyterLab 和 RStudio，数据在浏览器界面中完成全流程分析，无需离开内网环境。
 
 ### 1.2 信创合规目标
 
@@ -44,8 +44,8 @@ Data AI 是一套以 AI Agent 为大脑、Python + R 双语言交互式分析引
 ┌─────────────────────────────────────────────────────────┐
 │  开发工具层（第三梯队：不纳入信创监管）                    │
 │  ┌──────────┐  ┌───────────┐  ┌──────────┐              │
-│  │ OpenClaw │  │ JupyterLab│  │ RStudio  │              │
-│  │ MIT/Apache│  │ BSD/Apache│  │ AGPL v3  │              │
+│  │ DSH TUI  │  │ JupyterLab│  │ RStudio  │              │
+│  │ MIT       │  │ BSD/Apache│  │ AGPL v3  │              │
 │  │ AI Agent  │  │ Python 分析│  │ R 分析   │              │
 │  └──────────┘  └───────────┘  └──────────┘              │
 │   层级：数据分析工具    非生产运行环境    研发自用范围      │
@@ -78,6 +78,8 @@ Data AI 是一套以 AI Agent 为大脑、Python + R 双语言交互式分析引
 
 **核心论点：** Data AI 方案不在信创安全可靠测评的品类范围内，底层基础设施由已认证的信创产品兜底，不存在合规缺口。
 
+> **国产原生 AI Agent：** 上图中「AI Agent」层首选 **DeepSeek Harness（DSH）+ DeepSeek Harness TUI（dsh-tui）**——两者均为 DeepSeek 官方 MIT 开源，构成完整的国产原生方案；OpenClaw（MIT）为备选后端。DSH / dsh-tui 直接满足 AI 调度层与编程 Agent 层的国产化要求（详见第六、七节）。
+
 ------------------------------------------------------------------------
 
 ## 三、开源许可证合规性
@@ -87,6 +89,7 @@ Data AI 是一套以 AI Agent 为大脑、Python + R 双语言交互式分析引
 | 组件 | 许可证 | 合规分析 |
 |------------------------|------------------------|------------------------|
 | OpenClaw | MIT (核心) / Apache 2.0 (组件) | ✅ 宽松许可，可商用可修改，无分发限制 |
+| DSH（DeepSeek Harness）+ dsh-tui（DeepSeek Harness TUI） | MIT | ✅ DeepSeek 官方开源，国产原生，可商用可修改 |
 | JupyterLab | BSD 3-Clause | ✅ 极宽松许可 |
 | RStudio（开源版） | AGPL v3 | ✅ 作为独立服务使用，不涉及链接传染 |
 | Python | PSF License | ✅ 专用许可，极宽松 |
@@ -168,12 +171,12 @@ Data AI 支持自由切换（但不限于）以下国产大模型，均已通过
 Data AI 在 LLM 接入层之上，构建了 AI 编程与智能调度层，解决"AI 如何辅助数据分析"这一核心问题。架构如下：
 
 ```         
-OpenClaw (AI 调度 Agent · 嵌入式 openclaw chat)
+DSH（首选） / OpenClaw (AI 调度 Agent · 双后端)
 │
 ├─ 简单代码 ──► 国产 LLM ──────────── 直接生成执行
 │   (SQL / 基础 R / 基础 Python / 绘图)
 │
-└─ 复杂代码 ──► Claude Code ──► 国产 LLM
+└─ 复杂代码 ──► DeepSeek Harness TUI（首选）/ Claude Code ──► 国产 LLM
     (ML 建模 / 深度学习 / 多步特征工程)
                 │
                 ▼
@@ -207,17 +210,17 @@ Data AI 通过 MCP 协议直接连接到用户正在运行的 Jupyter Kernel 和
 
 | 能力 | 覆盖范围 | 实现路径 | 生态 |
 |------------------|------------------|------------------|------------------|
-| LLM AI | 自然语言→代码 | OpenClaw 调国产 LLM | SQL / 基础分析 / 绘图 |
-| ML AI | 机器学习建模 | OpenClaw → Claude Code → 国产 LLM | Python (PyTorch / TF / scikit-learn) + R (mlr3 / tidymodels) |
+| LLM AI | 自然语言→代码 | OpenClaw / DSH 调国产 LLM | SQL / 基础分析 / 绘图 |
+| ML AI | 机器学习建模 | OpenClaw / DSH → DeepSeek Harness TUI（首选）/ Claude Code → 国产 LLM | Python (PyTorch / TF / scikit-learn) + R (mlr3 / tidymodels) |
 
-大多数数据分析 AI 方案只做"用自然语言写 SQL / 写代码"。Data AI 在此基础上，通过 Claude Code 编码 Agent 连接国产 LLM，可以完成机器学习建模、深度学习、特征工程、超参调优等复杂任务——**一个方案覆盖从简单查询到复杂建模的全谱系数据分析**。
+大多数数据分析 AI 方案只做"用自然语言写 SQL / 写代码"。Data AI 在此基础上，通过 DeepSeek Harness TUI（首选）/ Claude Code 编码 Agent 连接国产 LLM，可以完成机器学习建模、深度学习、特征工程、超参调优等复杂任务——**一个方案覆盖从简单查询到复杂建模的全谱系数据分析**。
 
 ### 6.3 任务分层调度
 
 | 任务复杂度 | 举例 | 执行路径 |
 |------------------------|------------------------|------------------------|
-| 简单 | SQL 查询、基础 R/Python 脚本、折线图箱线图等常规绘图 | OpenClaw → 国产 LLM → MCP → Kernel / Session |
-| 复杂 | ML 建模、深度学习、多步特征工程、交叉验证 | OpenClaw → Claude Code → 国产 LLM → MCP → Kernel / Session |
+| 简单 | SQL 查询、基础 R/Python 脚本、折线图箱线图等常规绘图 | OpenClaw / DSH → 国产 LLM → MCP → Kernel / Session |
+| 复杂 | ML 建模、深度学习、多步特征工程、交叉验证 | OpenClaw / DSH → DeepSeek Harness TUI（首选）/ Claude Code → 国产 LLM → MCP → Kernel / Session |
 
 ### 6.4 安全架构
 
@@ -225,7 +228,7 @@ Data AI 通过 MCP 协议直接连接到用户正在运行的 Jupyter Kernel 和
 
 **① 嵌入式 Agent 模式**
 
-生产环境中，OpenClaw 以 `openclaw chat` 命令运行，**不启动 Gateway 网关服务**：
+生产环境中，OpenClaw 以 `openclaw chat` 命令运行，**不启动 Gateway 网关服务**（DSH 后端以 `dsh --profile dsh-tui` 终端模式运行，同样无网关暴露）：
 
 -   ❌ 无 HTTP 端口监听
 -   ❌ 无 Web 管理界面
@@ -240,7 +243,7 @@ Agent 在用户终端的进程上下文中执行，所有操作受限于当前 L
 服务器 ── Linux 用户隔离
 │
 ├─ 用户 A (linux user) ──────────────────────
-│  ├─ openclaw chat（用户进程，无端口）
+│  ├─ openclaw chat / dsh --profile dsh-tui（用户进程，无端口）
 │  ├─ RStudio Server（端口 8787-A）
 │  │    └─ R API Server（端口 8161-A）
 │  │         └─ Bearer Token A
@@ -249,7 +252,7 @@ Agent 在用户终端的进程上下文中执行，所有操作受限于当前 L
 │  └─ ~/r2py/（数据交换目录，仅本用户可见）
 │
 ├─ 用户 B (linux user) ──────────────────────
-│  ├─ openclaw chat
+│  ├─ openclaw chat / dsh --profile dsh-tui
 │  ├─ RStudio Server（端口 8787-B）
 │  │    └─ R API Server（端口 8226-B）
 │  │         └─ Bearer Token B
@@ -265,9 +268,9 @@ Agent 在用户终端的进程上下文中执行，所有操作受限于当前 L
 
 | 组件 | 通信方式 | 安全措施 |
 |------------------------|------------------------|------------------------|
-| OpenClaw ↔ Jupyter Kernel | ZMQ (jupyter-mcp) | ZMQ 绑定 IPC / localhost，无网络端口暴露 |
-| OpenClaw ↔ R Session | HTTP (r-session-mcp) → R API | 每用户独立端口 + Bearer Token 验证 |
-| OpenClaw 读取用户 Token | openclaw.json | 各用户自己的配置文件，权限受 Linux 保护 |
+| OpenClaw / DSH ↔ Jupyter Kernel | ZMQ (jupyter-mcp) | ZMQ 绑定 IPC / localhost，无网络端口暴露 |
+| OpenClaw / DSH ↔ R Session | HTTP (r-session-mcp) → R API | 每用户独立端口 + Bearer Token 验证 |
+| Agent 后端读取用户 Token | openclaw.json / cordis.patch.yml | 各用户自己的配置文件，权限受 Linux 保护 |
 | R ↔ Python 数据交换 | CSV 文件（\~/r2py/） | 各用户自己的目录，文件系统权限隔离 |
 
 **R API Token 授权流程：**
@@ -278,8 +281,8 @@ Agent 在用户终端的进程上下文中执行，所有操作受限于当前 L
   options(rsession_api_token = "<用户自定义 Token>")
   source("r-session-api.R")
 
-OpenClaw 发起调用时：
-  openclaw.json 中配置该用户的 Token →
+Agent 后端（OpenClaw / DSH）发起调用时：
+  openclaw.json / cordis.patch.yml 中配置该用户的 Token →
   MCP Server 读取 Token →
   在 HTTP 请求头部插入 Authorization: Bearer <Token> →
   R API Server 验证 Token 是否与启动时 options() 设定的匹配 →
@@ -294,7 +297,11 @@ Jupyter Kernel 通过 ZMQ 协议与 JupyterLab 前端通信，绑定 IPC 或 loc
 
 **OpenClaw（MIT）** - 完全开源可审计 - 非 root 运行，操作权限受 Linux 用户权限天然限制 - 嵌入式模式无网络暴露面，不构成新的攻击面 - 权限可通过 openclaw.json 配置命令白名单进一步收紧
 
-**Claude Code（Anthropic 专有软件）** - **角色定位**：编码工具，不纳入生产交付清单，用户自行安装 - 调用国产 LLM，不走 Anthropic API，数据不出境 - **可完全替代**（见第七节国产替代方案）
+**DSH（DeepSeek Harness，MIT）** - DeepSeek 官方开源 harness，国产原生 - 非 root 运行，操作权限受 Linux 用户权限天然限制 - 终端模式无网络暴露面，不构成新的攻击面 - 信创原生路径，直接满足国产化要求
+
+**DSH TUI（dsh-tui，DeepSeek Harness TUI，MIT）** - DeepSeek 官方交互式 TUI 编程 Agent，与 DSH 同源 - 非 root 运行，终端模式无网络暴露面 - 首选编程 Agent，实测平替 Claude Code
+
+**Claude Code（Anthropic 专有软件）** - **角色定位**：编码工具（历史遗留），已被 DeepSeek Harness TUI 平替，不纳入生产交付清单 - 调用国产 LLM，不走 Anthropic API，数据不出境 - **已被 DSH TUI 完全替代**（见第七节）
 
 **运行环境** - Linux 用户隔离 = 操作系统级安全边界 - 全部组件以普通用户运行，无 root 提权路径 - 等保 2.0 对应：身份鉴别（LDAP / OIDC）、访问控制（用户权限）、安全审计（auditd + 操作日志）
 
@@ -304,22 +311,23 @@ Jupyter Kernel 通过 ZMQ 协议与 JupyterLab 前端通信，绑定 IPC 或 loc
 
 ### 7.1 背景
 
-部分监管行业用户要求方案中使用的 AI Agent 框架与编程 Agent **均为国产产品**。当前方案选用 OpenClaw（MIT 开源）与 Claude Code（Anthropic），两者在功能上均可通过国产替代平替，且替换后不影响核心分析能力。
+部分监管行业用户要求方案中使用的 AI Agent 框架与编程 Agent **均为国产产品**。当前方案中，AI Agent 后端已内置 **DSH（DeepSeek Harness，DeepSeek 官方 MIT 开源）**，编程 Agent 已内置 **DeepSeek Harness TUI（dsh-tui，MIT 开源）**，二者同源、均为 DeepSeek 官方国产原生，直接满足国产化要求；OpenClaw（MIT 开源）与 Claude Code（Anthropic）亦均可作为备选，替换后不影响核心分析能力。
 
 ### 7.2 替代需求映射
 
 | 当前组件 | 国产替代目标 | 选型关键要求 |
 |------------------------|------------------------|------------------------|
-| OpenClaw（AI Agent 框架） | 国产 Agent 框架 | 支持 MCP 协议、CLI 运行、多用户 Linux 部署、skill 体系兼容 |
-| Claude Code（编程 Agent） | 国产编程 Agent CLI | CLI 终端运行、支持 MCP 协议、可接国产 LLM、RStudio / JupyterLab 终端内可用 |
+| OpenClaw（AI Agent 框架） | 国产 Agent 框架（**DSH 已内置**） | 支持 MCP 协议、CLI 运行、多用户 Linux 部署、skill 体系兼容 |
+| Claude Code（编程 Agent） | 国产编程 Agent（**DSH TUI 已内置**） | CLI 终端运行、支持 MCP 协议、可接国产 LLM、RStudio / JupyterLab 终端内可用 |
 
-### 7.3 OpenClaw 替代方案
+### 7.3 AI Agent 后端替代方案（OpenClaw / DSH）
 
 国产 AI Agent 框架已形成多个可选方案，涵盖开源与闭源两类，用户可根据自身的合规要求和采购策略灵活选择：
 
 | 方案 | 厂商 | 许可证 | 关键特性 | 适用性分析 |
 |---------------|---------------|---------------|---------------|---------------|
 | **OpenClaw（原生）** | 社区 | MIT | CLI + MCP + skill 体系完全支持 | MIT 全开源，无许可证合规风险，嵌入式模式无网络暴露 |
+| **DSH（DeepSeek Harness）** | 深度求索 | MIT | DeepSeek 官方 harness，原生 tool-calling / reasoning，MCP 支持 | 国产原生，信创路径，直接满足国产化要求（**已集成**） |
 | **LinClaw** | 七牛云 | MIT | 私有化部署、MCP 支持 | 唯一开源国产方案，代码可审计，适合自主可控要求严格的场景 |
 | **QClaw** | 腾讯 | 闭源 | 微信/QQ 集成、远程操控 | 适合腾讯生态深度用户，邀请内测中 |
 | **ArkClaw** | 字节跳动 | 闭源 | 飞书原生集成、等保三级适配 | 适合字节/飞书生态用户，火山方舟平台权益可用 |
@@ -329,26 +337,29 @@ Jupyter Kernel 通过 ZMQ 协议与 JupyterLab 前端通信，绑定 IPC 或 loc
 
 **集成要求与兼容性保证：** 作为 Data AI 方案的组成部分，替代方案需支持在服务器终端中以 CLI 方式运行，从而可在 RStudio 和 JupyterLab 内打开的终端中直接使用。无论选择上述哪个方案，自研的 `jupyter-mcp` 和 `r-session-mcp` 均为标准 MCP Server，Skill 体系为通用设计，**无需修改即可跨平台运行**。
 
-**核心论点：** OpenClaw 本身是 MIT 协议的全开源软件，在信创框架下**不属于需要替换的范畴**。对于有明确国产化要求的使用方： - 追求自主可控 → 选 LinClaw（MIT 开源，代码可审计） - 与某大厂已有深度合作 → 可直接采购其闭源国产虾 - 无论哪种选择，底层分析能力不受影响
+**核心论点：** AI Agent 后端现为**双后端**——DSH（DeepSeek 官方 MIT 开源）为国产原生后端，直接满足国产化要求；OpenClaw（MIT）全开源，在信创框架下**不属于需要替换的范畴**。对于有更严格国产化要求的使用方： - 首选 DSH（DeepSeek 官方国产原生） - 追求第三方自主可控 → 选 LinClaw（MIT 开源，代码可审计） - 与某大厂已有深度合作 → 可直接采购其闭源方案 - 无论哪种选择，底层分析能力不受影响
 
 ### 7.4 编程 Agent 替代方案
 
-当前方案选用 Claude Code 作为编程 Agent，基于以下考虑： 1. OpenClaw 内置 `coding-agent` skill 支持，与 Claude Code 原生集成 2. 当前最强的通用编程 Agent 3. CLI 设计适合服务器终端环境，可集成进 OpenClaw 的调度流水线 4. 可在 RStudio / JupyterLab 的终端窗口中直接使用 5. 可调用国产LLM
+编程 Agent 负责"复杂代码"的生成与多步工程（ML 建模、深度学习、特征工程、超参调优）。当前方案**首选 DeepSeek Harness TUI（dsh-tui）**作为编程 Agent——它与执行 Agent **DSH（DeepSeek Harness）同源**，均为 DeepSeek 官方 MIT 开源，原生支持 tool-calling / reasoning，实测已可完全平替 Claude Code，无需第三方产品即可构成完整的国产原生方案。
 
-国产编程 Agent CLI 产品已形成多个选项，涵盖开源与闭源两类：
+首选 DSH + dsh-tui 的配对理由： 1. **同源国产原生**——两者均为 DeepSeek 官方开源，数据全程国内，无需 Anthropic / Claude Code 2. **原生 MCP 支持**——dsh-tui 经 `dsh --profile dsh-tui` 直接挂载 `jupyter-mcp` / `r-session-mcp` 3. **TUI 终端运行**——可在 RStudio / JupyterLab 内置终端中直接使用 4. **交互式体验优秀**——实测可完全平替 Claude Code 的编码 Agent 体验 5. **可接国产 LLM**——DeepSeek 直连，或按需切换 GLM / MiniMax 等
+
+若用户有其它生态偏好，国产编程 Agent CLI 亦提供多个备选：
 
 | 方案 | 厂商 | 许可证 | CLI | MCP | 接国产 LLM | 适用性分析 |
 |-----------|-----------|-----------|-----------|-----------|-----------|-----------|
-| **Kimi Code CLI** | 月之暗面 | **Apache 2.0** ✅ | ✅ | ✅ | ✅ | 开源，定位即"Claude Code 的国产替代"，CLI + MCP 完整支持，**推荐优先** |
+| **DSH TUI（dsh-tui）** | 深度求索 | **MIT** ✅ | ✅ | ✅ | ✅ | DeepSeek 官方 TUI，与 DSH 同源，**首选**，实测平替 Claude Code |
+| **Kimi Code CLI** | 月之暗面 | **Apache 2.0** ✅ | ✅ | ✅ | ✅ | 开源，定位"Claude Code 的国产替代"，CLI + MCP 完整支持 |
 | **CodeBuddy Code** | 腾讯 | 闭源 | ✅ | ✅ | ✅ | 腾讯云产品，CLI + MCP 完整支持，适合腾讯生态用户 |
 | **Kiro CLI** | 字节跳动 | 闭源 | ✅ | ✅ | ✅ | 适合字节生态用户，MCP 原生支持 |
 | **Qoder CN CLI** | 阿里云 | 闭源 | ✅ | — | ✅ | 阿里通义灵码的 CLI 形态，适合阿里云生态用户 |
 | **Aider** | 社区 | **Apache 2.0** ✅ | ✅ | ⚠️ 需桥接 | ✅ | 开源成熟，可配合 MCP 桥接工具 |
 | **Cline CLI** | 社区 | **Apache 2.0** ✅ | ✅ | ✅ | ✅ | 开源，VSCode 扩展的 CLI 模式，MCP 原生支持 |
 
-**优选方案：Kimi Code CLI**
+**首选方案：DeepSeek Harness TUI（dsh-tui）**
 
-Kimi Code CLI 具备以下关键特性： - ✅ **开源**（Apache 2.0），代码可审计 - ✅ **CLI 终端运行**——可在 RStudio / JupyterLab 终端中直接使用 - ✅ **MCP 协议原生支持**——可直接调用 `jupyter-mcp` 和 `r-session-mcp`，无需修改 - ✅ **国产产品**（月之暗面，北京），数据全程国内 - ✅ **独立进程运行**——不依赖 IDE，与多用户 Linux 隔离方案天然兼容 - ✅ **可接入 OpenClaw 的 `coding-agent` skill 调度体系**
+dsh-tui 具备以下关键特性： - ✅ **开源**（MIT），代码可审计 - ✅ **与 DSH 同源**——DeepSeek 官方 harness 的交互式 TUI，原生 tool-calling / reasoning - ✅ **TUI 终端运行**——可在 RStudio / JupyterLab 终端中直接使用 - ✅ **MCP 协议原生支持**——可直接调用 `jupyter-mcp` 和 `r-session-mcp`，无需修改 - ✅ **国产原生**（深度求索），数据全程国内 - ✅ **实测平替 Claude Code**——交互式编码体验完整，独立进程运行，与多用户 Linux 隔离方案天然兼容
 
 ### 7.5 替换后架构
 
@@ -358,10 +369,10 @@ Kimi Code CLI 具备以下关键特性： - ✅ **开源**（Apache 2.0），代
 多用户 Linux 环境（每个用户独立）
 │
 ├─ 国产 Agent 框架 ──────────────────────
-│  （LinClaw / OpenClaw 原生  / 大厂闭源方案）
+│  （DSH / LinClaw / OpenClaw 原生  / 大厂闭源方案）
 │  │
-│  ├─ 国产编程 Agent CLI ← 代替 Claude Code
-│  │    （Kimi Code CLI / CodeBuddy / Kiro 等）
+│  ├─ 国产编程 Agent（DSH TUI 首选）← 代替 Claude Code
+│  │    （DSH TUI 首选 / Kimi Code CLI / CodeBuddy 等）
 │  │    └─ 调用国产 LLM
 │  │
 │  ├─ 直接调国产 LLM（简单代码 / SQL / 绘图）
@@ -421,8 +432,8 @@ Data AI 方案的供应链设计原则：**核心层采用开源生态，接口�
 
 | 架构层 | Data AI 方案 | 可替换性 |
 |------------------------|------------------------|------------------------|
-| AI Agent 调度层 | OpenClaw（MIT）或国产替代（LinClaw MIT / 大厂闭源方案） | 多方案可选，跨平台兼容 |
-| 编程 Agent | Claude Code 或国产替代（Kimi Code CLI / CodeBuddy / Kiro 等） | 多方案可选，CLI + MCP 标准统一 |
+| AI Agent 调度层 | OpenClaw（MIT）/ DSH（DeepSeek 官方 MIT）或国产替代（LinClaw MIT / 大厂闭源方案） | 多方案可选，跨平台兼容 |
+| 编程 Agent | DSH TUI（DeepSeek 官方）或国产替代（Kimi Code CLI / CodeBuddy 等） | 多方案可选，CLI + MCP 标准统一 |
 | 交互式分析引擎 | JupyterLab（BSD）+ RStudio（AGPL） | 成熟开源，社区长期维护 |
 | MCP 数据通道 | 自研 jupyter-mcp + r-session-mcp | 标准 MCP 协议，不依赖特定框架 |
 | 底层基础设施 | 国产信创 OS/DB/CPU（麒麟/OceanBase、GaussDB/鲲鹏等） | 信创目录多供应商备选 |
@@ -472,7 +483,7 @@ Data AI 平台在等保 2.0（GB/T 22239-2019）框架下可配合如下：
 -   数据 **不出内网**，满足银保监会数据管理规定
 -   国产 LLM 满足金融业 AI 应用监管要求
 -   可使用信创基础架构（鲲鹏 + 麒麟 + OceanBase、GaussDB）
--   国产替代方案覆盖 AI 调度层与编码 Agent 层；数据分析工具链（JupyterLab、RStudio）属于第三梯队，不在信创监管范围内，无需替代
+-   国产化已内置——AI Agent 调度层（DSH）与编程 Agent 层（DSH TUI）均为 DeepSeek 官方国产原生；数据分析工具链（JupyterLab、RStudio）属于第三梯队，不在信创监管范围内，无需替代
 
 ### 11.2 政务/公共服务
 
@@ -491,14 +502,14 @@ Data AI 平台在等保 2.0（GB/T 22239-2019）框架下可配合如下：
 
 ## 十二、结论
 
-Data AI 方案（OpenClaw + JupyterLab + RStudio 一体化数据分析平台）在信创合规框架下**不构成合规风险**：
+Data AI 方案（OpenClaw / DSH + JupyterLab + RStudio 一体化数据分析平台）在信创合规框架下**不构成合规风险**：
 
 1.  ✅ **开发工具/数据分析工具不在信创安全可靠测评范围内**，不需要也不存在"信创认证"
 2.  ✅ **底层基础设施**（OS、DB、CPU）使用已认证的信创目录产品兜底
 3.  ✅ **LLM 全部使用国产 API 或本地部署**，数据不出境
 4.  ✅ **许可证合规**——全部组件使用宽松/社区许可，架构隔离消除传染风险
 5.  ✅ **AI 调度层安全架构**——嵌入式 Agent 零网络暴露，多用户 Linux 完全隔离，R API Token 授权，Jupyter ZMQ 天然隔离
-6.  ✅ **国产替代方案可行**——Agent 框架和编程 Agent 均有成熟国产替代，MCP 生态通用兼容
+6.  ✅ **国产化已内置**——AI Agent 后端 DSH + 编程 Agent DSH TUI 均为 DeepSeek 官方国产原生，另有 LinClaw / Kimi Code CLI 等国产替代，MCP 生态通用兼容
 7.  ✅ **自研代码可审计**，整体供应链无单一供应商锁定
 8.  ✅ **图数据库采取灰度过渡策略**，预留国产替换接口
 9.  ✅ **可配合等保 2.0 各项要求**
