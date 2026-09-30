@@ -2,9 +2,11 @@
 
 > OpenClaw / DeepSeek Harness / Claude Code with Jupyter Lab and Rstudio
 
-An integrated **Python + R** bilingual data analysis workbench, powered by an **AI Agent** as its brain, connecting **JupyterLab (Python)** and **RStudio (R)** — two interactive analysis engines — through the **MCP protocol** to unify tool interfaces and enable seamless cross-language data flow. Switch between two agent backends — **OpenClaw** / **DeepSeek Harness (DSH)** — and command with natural language, access via mobile phone or browser.
+An integrated **Python + R** bilingual AI data analysis workbench, powered by an **AI Agent** as its brain, connecting **JupyterLab (Python)** and **RStudio (R)** — two interactive analysis engines — through the **MCP protocol** to unify tool interfaces and enable seamless cross-language data flow. Switch between two agent backends — **OpenClaw** / **DeepSeek Harness (DSH)** — and command with natural language, access via mobile phone or browser.
 
-Built for **professional data analysts who write code and can take over from the AI** to continue exploring on their own: the AI gets things started and moves them forward, and you take over the code whenever you like.
+Built for **professional data analysts who write code and can take over from the AI** to continue exploring on their own: the AI assists with writing code and analyzing data — you stay in command, and you can take over the code and do it yourself anytime.
+
+For non-technical business users, a commercial version — **DataAI Portal** — has been built on top of DataAI: a browser-based natural-language conversation interface for AI data analysis, with OpenClaw/DSH dual agents, dual audit trails (user and system), and support for four languages (R/Python/SQL/Cypher). The current v1.0.0 release supports single-server multi-user deployment, enabling small-to-medium government and enterprise organizations of up to 150 users to go live on an intranet. For details, read [《DataAI-Portal-AI数据分析平台简介.md》](https://github.com/icejean/dataai_with_jupyterlab_and_rstudio/blob/main/docs/DataAI-Portal-AI数据分析平台简介.md).
 
 ------------------------------------------------------------------------
 

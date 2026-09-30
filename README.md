@@ -2,9 +2,10 @@
 
 > OpenClaw / DeepSeek Harness / Claude Code with Jupyter Lab and Rstudio
 
-一体化的 **Python + R** 双语数据分析工作台，以 **AI Agent 为大脑**，串联 **JupyterLab (Python)** 和 **RStudio (R)** 两个交互式分析引擎，通过 **MCP 协议**统一工具接口，实现跨语言数据流无缝流转。支持 **OpenClaw** / **DeepSeek Harness (DSH)** 双 Agent 后端可切换，自然语言指挥，手机、浏览器等多渠道接入。
+一体化的 **Python + R** 双语AI数据分析工作台，以 **AI Agent 为大脑**，串联 **JupyterLab (Python)** 和 **RStudio (R)** 两个交互式分析引擎，通过 **MCP 协议**统一工具接口，实现跨语言数据流无缝流转。支持 **OpenClaw** / **DeepSeek Harness (DSH)** 双 Agent 后端可切换，自然语言指挥，手机、浏览器等多渠道接入。
 
-面向**会写代码、随时可从 AI 接手自己分析探索**的专业数据分析师：AI 负责起步与推进，你随时接管代码、继续做下去。
+面向**会写代码、随时可从 AI 接手自己分析探索**的专业数据分析师：AI 辅助写代码和分析数据，你负责指挥，也可以随时接管代码、亲自动手。
+对于非技术背景的业务用户，在DataAI的基础上研发了商业化的版本DataAI Portal，浏览器自然语言对话界面AI数据分析，OpenClaw/DSH双Agent、用户与系统双审计、R/Python/SQL/Cypher四语言支持，目前v1.0.0版已经实现单服务器多用户部署，内网部署可以支持150用户以内的中小型政企组织小规模落地应用，具体可以阅读以下的资料[《DataAI-Portal-AI数据分析平台简介.md》](https://github.com/icejean/dataai_with_jupyterlab_and_rstudio/blob/main/docs/DataAI-Portal-AI数据分析平台简介.md)了解。
 
 ------------------------------------------------------------------------
 
