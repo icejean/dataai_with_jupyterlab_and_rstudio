@@ -602,7 +602,9 @@ Full code, data, and 22-step mobile screenshots: [`example/`](./example/README.e
 |---------------|-------------|-------------------------------------------------|
 | `R_API_HOST`  | `127.0.0.1` | R API address                                   |
 | `R_API_PORT`  | `8161`      | R API port                                      |
+| `R_API_TIMEOUT` | `30`      | httpx client timeout (seconds); increase for long tasks |
 | `R_API_TOKEN` | Empty       | R API auth Token (empty = disabled)             |
+| `R_SESSION_OUTPUT_LINE_LIMIT` | `2000` | run_code output line truncation limit (protects agent context) |
 | `MCP_PORT`    | `0`         | MCP Server port; `0` = stdio mode (recommended) |
 
 ### R API Server (r-session-api.R)
@@ -612,7 +614,8 @@ Full code, data, and 22-step mobile screenshots: [`example/`](./example/README.e
 | `options(rsession_api_port = ...)` or `R_API_PORT` | `8161` | httpuv listen port |
 | `options(rsession_api_host = ...)` | `127.0.0.1` | Listen address |
 | `options(rsession_api_max_rows = ...)` | `100` | Max preview rows |
-| `options(rsession_api_max_str = ...)` | `20` | `str()` truncation level |
+| `options(rsession_api_max_str = ...)` | `20` | `str()` truncation level (max.level) |
+| `options(rsession_api_max_str_len = ...)` | `8` | `str()` width limit (vec.len / list.len; prevents ggproto/S7/R6 element-by-element expansion) |
 | `options(rsession_api_token = ...)` or `R_API_TOKEN` | Empty | Bearer Token (empty = no auth) |
 
 > R options take priority over environment variables. All settings can be configured via `options()` before `source("r-session-api.R")`.
@@ -684,6 +687,12 @@ Check that you're running in the correct kernel cell. If the connection file can
 from jupyter_mcp import hook
 hook.register(force=True)  # force flag overwrites existing registration file
 ```
+
+### JupyterLab Notebook Goes Blank After Manual Edits
+
+In Notebook mode, if you manually edit the Notebook in the JupyterLab page (add/modify cells) without saving, then go back to the terminal and have the AI update that Notebook, the update conflict causes the page to render as blank.
+
+**Manually refreshing the page restores the display**, but your unsaved manual edits will be lost. So after manually editing a Notebook, always save first (`Ctrl+S` / `Cmd+S`) before letting the AI continue.
 
 ------------------------------------------------------------------------
 

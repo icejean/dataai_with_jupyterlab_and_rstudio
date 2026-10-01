@@ -11,9 +11,12 @@ r-session-mcp-server.py — MCP Server for R Session API
   3. 在 OpenClaw 中配置 MCP 连接（见 README.md）
 
 环境变量：
-  R_API_HOST   R API 地址（默认 127.0.0.1）
-  R_API_PORT   R API 端口（默认 8161）
-  MCP_PORT     MCP 服务器端口（默认 8100），0=stdio模式
+  R_API_HOST      R API 地址（默认 127.0.0.1）
+  R_API_PORT      R API 端口（默认 8161）
+  R_API_TIMEOUT   R API 客户端超时（秒，默认 30），长任务调大
+  R_API_TOKEN     R API 认证 Token（默认空=不启用）
+  MCP_PORT        MCP 服务器端口（默认 0），0=stdio模式
+  R_SESSION_OUTPUT_LINE_LIMIT  run_code 输出行数截断上限（默认 2000）
 
 依赖安装：
   pip install mcp httpx

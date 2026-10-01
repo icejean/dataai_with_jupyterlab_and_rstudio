@@ -601,7 +601,9 @@ OpenClaw 大模型 AI 调度（22 步）
 |----|----|----|
 | `R_API_HOST` | `127.0.0.1` | R API 地址 |
 | `R_API_PORT` | `8161` | R API 端口 |
+| `R_API_TIMEOUT` | `30` | httpx 客户端超时（秒），长任务调大 |
 | `R_API_TOKEN` | 空 | R API 认证 Token（空=不启用） |
+| `R_SESSION_OUTPUT_LINE_LIMIT` | `2000` | run_code 输出行数截断上限，防止长报告撑爆上下文 |
 | `MCP_PORT` | `0` | MCP Server 端口，`0` = stdio 模式（推荐） |
 
 ### R API Server（r-session-api.R）
@@ -611,7 +613,8 @@ OpenClaw 大模型 AI 调度（22 步）
 | `options(rsession_api_port = ...)` 或 `R_API_PORT` | `8161` | httpuv 监听端口 |
 | `options(rsession_api_host = ...)` | `127.0.0.1` | 监听地址 |
 | `options(rsession_api_max_rows = ...)` | `100` | 预览数据最大行数 |
-| `options(rsession_api_max_str = ...)` | `20` | `str()` 截断层级 |
+| `options(rsession_api_max_str = ...)` | `20` | `str()` 截断层级（max.level） |
+| `options(rsession_api_max_str_len = ...)` | `8` | `str()` 宽度上限（vec.len / list.len，防 ggproto/S7/R6 逐元素展开） |
 | `options(rsession_api_token = ...)` 或 `R_API_TOKEN` | 空 | Bearer Token（空=不启用认证） |
 
 > R options 优先级高于环境变量。所有配置可在 `source("r-session-api.R")` 前通过 `options()` 设置。
@@ -683,6 +686,12 @@ unset ALL_PROXY HTTP_PROXY HTTPS_PROXY http_proxy https_proxy
 from jupyter_mcp import hook
 hook.register(force=True)  # 加 force 参数覆盖已有的注册文件
 ```
+
+### JupyterLab Notebook 手工编辑后页面空白
+
+在 Notebook 模式下，若在 JupyterLab 页面里手工改动过 Notebook（新增/修改 cell）后没有存盘，就回到终端继续指挥 AI 更新该 Notebook，会导致更新冲突，页面显示为一片空白。
+
+此时**手动刷新页面即可恢复显示**，但手工改动且未存盘的内容会丢失。因此手工改动 Notebook 后，务必先存盘（`Ctrl+S` / `Cmd+S`）再让 AI 继续操作。
 
 ------------------------------------------------------------------------
 
