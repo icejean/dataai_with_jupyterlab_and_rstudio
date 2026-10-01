@@ -109,8 +109,8 @@ baidu-search 已配置在 `~/.openclaw/workspace/skills/`，需确保 `skills.lo
 ```
 AI 模型 ⇄ OpenClaw ⇄ MCP (jupyter-mcp) ⇄ ZMQ (jupyter_client) ⇄ Jupyter Lab Kernel
 ```
-- 代码：`~/workspace/jupyter_mcp/`
-- Server：`~/workspace/jupyter_mcp/jupyter-mcp-server.py`
+- 代码：`~/dataai_with_jupyterlab_and_rstudio/jupyter_mcp/`
+- Server：`~/dataai_with_jupyterlab_and_rstudio/jupyter_mcp/jupyter-mcp-server.py`
 - 注册文件：`~/.jupyter-mcp/current`
 
 ### 通用工具（两种模式共用）
@@ -213,8 +213,8 @@ matplotlib.rcParams['axes.unicode_minus'] = False       # 解决负号显示问�
 - 架构：AI 模型 ⇄ OpenClaw ⇄ MCP (r-session) ⇄ R API (httpuv) ⇄ RStudio R Session
 - R API 运行在 `http://127.0.0.1:<port>`，通过 `POST /eval` 执行 R 代码
 - 端口由 `openclaw.json` 中 `mcp.servers.r-session.env.R_API_PORT` 配置（本机实际 8226）
-- MCP Server 位置：`~/r-session-ai/r-session-mcp-server.py`
-- R API 脚本位置：`~/r-session-ai/r-session-api.R`
+- MCP Server 位置：`~/dataai_with_jupyterlab_and_rstudio/r-session-ai/r-session-mcp-server.py`
+- R API 脚本位置：`~/dataai_with_jupyterlab_and_rstudio/r-session-ai/r-session-api.R`
 
 ### 使用方式
 - 先确认 R API 是否运行：`curl -s -H "Authorization: Bearer <token>" http://127.0.0.1:<port>/health`
@@ -248,16 +248,7 @@ matplotlib.rcParams['axes.unicode_minus'] = False       # 解决负号显示问�
 ### ⚠️ 注意事项：`rm(list=ls())` 会清掉 API 函数
 R API 的辅助函数（`safe_eval`、`ok`、`err`、`server` 等）存储在 `.GlobalEnv` 中。如果用户在 RStudio Console 中执行 `rm(list=ls())`，API 处理器会被一并清除，需重新 `source("r-session-ai/r-session-api.R")` 恢复。
 
-### 多用户验证（2026.6.6）
-
-**结果：方案表现完美 ✅**
-
-- 每个用户的 RSession 是独立 OS 进程，httpuv 各自绑定不同端口，互不干扰
-- `httpuv::stopServer(server)` 有效但无声，`stopAllServers()` 也支持
-- `httpuv::stopAllServers()` 在另一个 R Session 中调用不会影响当前 R Session
-- 适合多用户并行使用，隔离性可靠
-
-### 安全加固：R API Token 认证（2026.6.7）
+### 安全加固：R API Token 认证
 
 **背景：** 多用户场景下，R API 绑定 127.0.0.1 但所有本地用户可访问。恶意用户可扫描端口后
 `curl http://127.0.0.1:<port>/eval` 执行任意 R 代码，劫持其他用户的 R session。
@@ -309,7 +300,7 @@ curl -H "Authorization: Bearer <token>" http://127.0.0.1:<port>/health
 
 ---
 
-## R ↔ Python 双向数据交换 (2026.6.7 最终版)
+## R ↔ Python 双向数据交换
 
 两个 MCP Server（r-session + jupyter-mcp）各有一对 `export_data` / `import_data` 工具，通过 CSV 文件实现 R Session 和 Jupyter Kernel 之间的数据交换。
 
@@ -339,24 +330,6 @@ Jupyter Kernel ← jupyter-mcp (Python) ← CSV
 |---|---|
 | `export_data(name)` | Python 侧 `pandas.to_csv()` 写 CSV |
 | `import_data(path, var_name)` | Python 侧 `pandas.read_csv()` 读 CSV |
-
-### 类型保真实测结果
-
-**Python → R（`fread`）— 所有类型无损 ✅**
-| Python | R | CSV 中间格式 |
-|---|---|---|
-| int64 | integer | `1` |
-| float64 | numeric | `10.5` |
-| object (str) | character | `Alice` |
-| bool | logical | `True` / `False` |
-| datetime64 (日期) | IDate/Date | `2026-06-07` |
-| datetime64 (时间) | POSIXct | `2026-06-07 10:30:00` |
-
-**R → Python（`read_csv`）— 日期/时间丢字符串 ❌**
-| R | Python | 处理 |
-|---|---|---|
-| integer/num/char/logical | int64/float64/object/bool | 自动认 ✅ |
-| Date / POSIXct | object (string) | `pd.to_datetime(df['col'])` 修复 |
 
 ### 共享目录
 - **默认位置：** `~/.openclaw/workspace/r2py/`（各用户工作区下，天然隔离）
@@ -409,7 +382,7 @@ sales.to_csv("r2py/sales_export.csv", index=False)
 | **导出数据** | `fwrite()` 写在 `.R` 脚本中 | `df.to_csv()` 写在 `run_code` 里 | `df.to_csv()` 写在 `run_code` 里 |
 | **导入数据** | `fread()` 写在 `.R` 脚本中 | `pd.read_csv()` 写在 `run_code` 里 | `pd.read_csv()` 写在 `run_code` 里 |
 
-> **关于 MCP 工具的 Console 可见性（2026-06-07 优化后）：**
+> **关于 MCP 工具的 Console 可见性：**
 > `export_data` / `import_data` 内部通过 kernel `execute_request` 执行代码，会触发 `execute_input` 消息。
 > - `.py + Console` 模式：`console-adopt` 捕获后生成 Console CodeCell，**各 1 个**（已合并多余验证步骤）
 > - Notebook 模式：MCP 工具操作不写入 .ipynb 文件，**不会产生 Cell**
