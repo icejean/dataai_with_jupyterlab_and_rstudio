@@ -23,7 +23,7 @@ DataAI 当前跑在 **OpenClaw** 上，DeepSeek 作为模型（`openai-completio
 | `r-session-ai/` | 8 个：`list_objects` `preview_data` `get_object_info` `run_code` `get_loaded_packages` `health_check` `export_data` `import_data` | stdio MCP → HTTP → httpuv R API（R session 内） |
 
 - 两 server 同名工具靠 **serverName 前缀**区分（OpenClaw：`jupyter-mcp__*` / `r-session__*`；DSH：`mcp__jupyter-mcp__*` / `mcp__r-session__*`）。
-- `r-session-mcp-server.py` 读 env `R_API_HOST/PORT/TOKEN`、`MCP_PORT`、`R2PY_SHARED_DIR`；**httpx timeout 写死 30.0**（唯一要改的点）；启动时已清 6 个代理 env。
+- `r-session-mcp-server.py` 读 env `R_API_HOST/PORT/TOKEN/TIMEOUT`、`R_SESSION_OUTPUT_LINE_LIMIT`、`MCP_PORT`、`R2PY_SHARED_DIR`（回退 `R_SHARED_DIR`）；httpx timeout 由 `R_API_TIMEOUT` 控制（默认 30，改造已落地）；启动时已清 6 个代理 env。
 
 ### 2.2 OpenClaw 配置切换（已就绪）
 `~/.openclaw/` 下已有一套场景切换机制：
@@ -137,7 +137,7 @@ docs/dsh-backend-spec.md               # 本文档
 
 ### 6.5 模型与凭证（密文不入库）
 - 仓库默认只用 DeepSeek：`agent-default-model` = `deepseek-official` + `deepseek-v4-flash`，凭证 `.credentials.yaml` 只 `DEEPSEEK_API_KEY`。
-- **多 provider 不随仓库发布**：DataAI 面向会写代码的专业数据分析师，需 GLM/MiniMax/星环等自行配 DSH 的 `settings.yaml`（`llm-pi-ai:`，`apiKeyEnv` 引用 key 名）——README 给一段参考即可（可借鉴 Portal `docs/dsh-multi-provider-config.md`）。
+- **多 provider 不随仓库发布**：DataAI 面向会写代码的专业数据分析师，需 GLM/MiniMax/息壤等自行配 DSH 的 `settings.yaml`（`llm-pi-ai:`，`apiKeyEnv` 引用 key 名）——README 给一段参考即可（可借鉴 Portal `docs/dsh-multi-provider-config.md`）。
 - 模板只放键名占位，真实密文只在 `~/.dsh/`（本机，0600）。
 
 ### 6.6 r2py 共享目录（已定：由后端 env 变量决定）
