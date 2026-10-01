@@ -121,7 +121,7 @@ docs/dsh-backend-spec.md               # 本文档
 ### 6.2 AGENTS.md（静态，手写提交，不写 sync 脚本）
 `dsh/AGENTS.md` 是**静态 persona**，从 `openclaw/MEMORY.md` 手写改写、提交到源码；用户自己拷贝到 `~/.dsh/AGENTS.md`。DataAI 用户是专业数据分析师个人用户，自配无碍。
 - **改写要点**：`OpenClaw`→`DeepSeek Harness`；`~/.openclaw/workspace`→`~/.dsh/workspace`；`~/.openclaw/openclaw.json`→`~/.dsh/profiles/dsh-tui/cordis.patch.yml`。
-- **OpenClaw 专属段落剥离**：嵌入式模式限制、`agent-browser`、`baidu-search` skill、邮件处理——非数据分析场景必需、DSH 下无对应实现，直接剥离；保留通用知识与守则（整体定位、Python/R 用法、中文字体、R↔Python 交换、Claude Code CLI、R 端安全守则）。
+- **OpenClaw 专属段落剥离**：嵌入式模式限制、`agent-browser`、`baidu-search` skill、邮件处理——非数据分析场景必需、DSH 下无对应实现，直接剥离；保留通用知识与守则（整体定位、Python/R 用法、中文字体、R↔Python 交换、R 端安全守则；Claude Code CLI 不再保留——信创 dsh-tui 环境无此工具）。
 - **工具名**：`openclaw/MEMORY.md` 不硬编码工具名（已核实），无需前缀替换；agent 靠 `listTools` 运行时发现。
 
 ### 6.3 r-session 的 env 透传（已 spike：支持）

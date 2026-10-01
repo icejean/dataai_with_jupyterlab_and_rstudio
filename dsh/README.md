@@ -122,4 +122,4 @@ DSH 下 MCP 工具名为 `mcp__jupyter-mcp__*` / `mcp__r-session__*`（比 OpenC
 
 ## 8. 多 provider（可选）
 
-仓库默认只用 DeepSeek（`deepseek-official` + `deepseek-v4-flash`）。如需 GLM / MiniMax / 星环 / LiteLLM 等，自行在 `~/.dsh/settings.yaml` 的 `llm-pi-ai:` 段添加 provider，并在 `~/.dsh/.credentials.yaml` 加对应 `*_API_KEY`（key 名须与 `apiKeyEnv` 一致）。DataAI 面向会写代码的专业数据分析师，多 provider 由用户自配，不随仓库发布。
+仓库默认只用 DeepSeek（`deepseek-official` + `deepseek-v4-flash`）。如需 GLM / MiniMax / 息壤 / LiteLLM 等，自行在 `~/.dsh/settings.yaml` 的 `llm-pi-ai:` 段添加 provider，并在 `~/.dsh/.credentials.yaml` 加对应 `*_API_KEY`（key 名须与 `apiKeyEnv` 一致）。DataAI 面向会写代码的专业数据分析师，多 provider 由用户自配，不随仓库发布。

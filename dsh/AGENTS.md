@@ -5,22 +5,9 @@
 > 将本文件复制到 `~/.dsh/AGENTS.md`，DSH 每个 session 自动加载为基线上下文。
 
 ## 代码生成偏好
-- 优先使用 **Claude Code** 生成代码（包括算法实现、全栈开发、脚本编写等）
 - 默认编程语言：Python
 - Python程序默认运行环境：Conda虚拟环境 `graphrag`
-- Claude Code配置文件位置：`~/.claude/settings.json`
-- **非交互式调用方式**（DSH 下用 tool-bash 执行）：
-
-  ```bash
-  # 最简单的非交互式调用
-  echo '<prompt>' | claude --print --model deepseek-v4-pro
-
-  # 允许写文件 + 读文件
-  echo '<prompt>' | claude --print --model deepseek-v4-pro --allowedTools "Write,Bash,Read"
-
-  # 沙箱环境（无网络，完全跳过权限确认）
-  echo '<prompt>' | claude --print --model deepseek-v4-pro --dangerously-skip-permissions
-  ```
+- 代码由 DSH 自身（DeepSeek 模型）直接生成并执行，**不依赖 Claude Code CLI**（信创环境无此工具）
 
 ## 🏗️ 整体解决方案定位
 
@@ -30,7 +17,7 @@
 | 组件 | 用途 |
 |---|---|
 | **DeepSeek Harness (DSH)** | AI 代理框架，连接用户 ↔ 工具 ↔ LLM |
-| **Claude Code / Vibe Coding** | AI 辅助编码阶段 |
+| **DeepSeek 模型 / Vibe Coding** | AI 辅助编码阶段 |
 | **R 语言 / RStudio (r-session)** | 数据分析（R 语言） |
 | **Python / Jupyter Lab (jupyter-mcp)** | 数据分析（Python 语言） |
 
@@ -88,77 +75,17 @@ AI 模型 ⇄ DSH ⇄ MCP (jupyter-mcp) ⇄ ZMQ (jupyter_client) ⇄ Jupyter Lab
 **工作流程：**
 1. `run_code` 执行代码 → 自动插入新 Cell 到 .ipynb 文件
 2. `jupyterlab-auto-reload` 扩展在 3 秒内自动刷新 Notebook 显示
-   —— ⚠️ **仅当浏览器模型"不脏"时才会刷新**，脏模型会静默跳过（见下方实测结论 B）
-3. 结果写回 Cell 中，包含执行序号和输出
+   —— ⚠️ **仅当浏览器模型"不脏"时才会刷新**，脏模型会静默跳过。
+   用户自己对Notebook的改动，要存盘后才能指挥AI分析数据，否则更新冲突会导致浏览器页面一片空白，需要手工刷新页面才能恢复正确的显示。
+4. 结果写回 Cell 中，包含执行序号和输出
 
 **可用工具：** `run_code`（自动插 Cell + 写回结果）
-
-**注意：** JupyterHub-singleuser 跑在 base conda 环境（`/usr/lib64/anaconda3/bin/jupyterhub-singleuser`），扩展需安装到 **base 环境的全局路径** `/usr/lib64/anaconda3/share/jupyter/labextensions/`，而非 graphrag 环境（`.../envs/graphrag/share/jupyter/labextensions/`）
-  - `jupyterlab-console-adopt` 自定义扩展已安装到此路径 ✅
-  - `jupyterlab-auto-reload` 也在这里有一份副本，确保 JupyterHub 能加载
-
-#### ⚠️ Notebook 模式实测结论（2026-09-30 全项验证）
-
-**A. 写入机制 = 整文件 read-modify-write，绕开浏览器模型**
-
-`jupyter-mcp-server.py` 的 `NotebookClient`：
-`get_notebook()`（GET `/api/contents/<path>`）→ 末尾 append cell → `save_notebook()`（PUT 整个 notebook）
-→ 再 `POST /checkpoints` 建检查点。**只改磁盘，不动浏览器里的内存模型。**
-
-**B. ⚠️ 最大的坑：浏览器"脏模型"会让自动刷新静默失效**
-
-`jupyterlab-auto-reload`（3 秒轮询 `last_modified`）源码逻辑：
-
-```js
-if(o!==a[n]){ a[n]=o; const e=r.model;
-  e&&e.dirty ? console.log(`[auto-reload] File changed: ${n}, unsaved changes exist. Skipping.`)
-             : (await r.revert(), …) }
-```
-
-**模型 dirty 时直接 `Skipping`。** 于是当浏览器里是一个**空的、未保存**的笔记本模型时，
-每 3 秒都跳过刷新 —— 磁盘上明明有 N 个 cell，用户看到的却是**一片空白**
-（连他自己之前跑过的 hook cell 也"消失"了），极易误判成"MCP 写错文件了"。
-
-**排查口径（先查这个，再怀疑路径）：**
-1. `stat -c '%y %s' <notebook>` + 解析 cell 数 —— **磁盘为准**
-2. 读 `~/.jupyter/lab/workspaces/default-*.jupyterlab-workspace` 的 `layout-restorer:data`
-   → `main.dock.widgets` / `main.current` —— **这才是用户浏览器真正打开的标签，权威**
-3. `GET /api/sessions` —— 确认 session 的 `path` 与 kernel id
-4. `~/.jupyter-mcp/current` 的 `source_path` + kernel id —— 三者必须一致
-5. 让用户 **Ctrl+Shift+R 硬刷新**（⚠️ **别按保存**：空模型一保存就把磁盘上的 cell 全覆盖了）
-
-**C. `Cell #N` 是 1-based 的 cell 位置，不是 `execution_count`**
-
-两者初始一致，一旦出现"幽灵执行"就分叉。实测：MCP 报 `Cell #7`，该 cell 的 `execution_count` 实为 `8`。
-
-**幽灵执行来源：** MCP 的 `export_data` / `import_data` 内部走 kernel `execute_request`，
-Notebook 模式下**不产生 cell，但会消耗一次执行号**。
-实测序列 `[1, None, 3, 4, 5, 6, 8, 9, 10, 11]` —— 缺的 `7` 就是 Python 侧 `import_data` 占掉的。
-
-**D. 工具可用性：Notebook 模式只有 `run_code`**
 
 | 工具 | Notebook 模式 |
 |---|---|
 | `run_code` | ✅ 插 cell + 写回结果 |
-| `export_data` / `import_data` | ✅ 可用，**不产生 cell**（但占执行号，见 C） |
+| `export_data` / `import_data` | ✅ 可用，**不产生 cell**（但会消耗一次 kernel 执行号） |
 | `read_source` / `write_source` / `append_source` | ❌ 报 `当前不是 .py + Console 模式，或找不到 .py 源文件路径` |
-
-**E. 已验证正常的能力（12 项全过）**
-
-- `run_code` 1 次调用插 1 个 cell，source 完整，`stream` + `execute_result` 两类输出齐全
-- 报错 → cell 内同时含报错前的 `stream` **和** `error`（ename/evalue/traceback）
-- 无输出语句（如 `x = 42`）→ 仍插 cell，`outputs=[]`
-- 图片 → 真 `image/png` 内嵌进 cell（非仅文本）
-- matplotlib 中文 → `SimHei` 解析到 `/usr/share/fonts/myfonts/simhei.ttf`，**0 条 glyph-missing**
-- `nbformat.validate` 通过
-- 与 R 侧 r2py 通道一致：n 完全相等，价格相对差 ≤ `5.7e-10`（≪ `1e-7`）
-
-**F. R↔Python 数据交换的可见性差异（补全后文表格）**
-
-| 方式 | Notebook 模式 | .py + Console 模式 |
-|---|---|---|
-| MCP 工具 `export_data` / `import_data` | ❌ 无 cell（占执行号） | ✅ console-adopt 生成 CodeCell |
-| 标准代码（`pd.read_csv` / `to_csv`）写在 `run_code` 里 | ✅ **有 cell** | ✅ 有 CodeCell |
 
 > 需要在 Notebook 里留痕的导入导出，**用标准代码方式**（写进 `run_code`）。
 
@@ -197,8 +124,6 @@ Notebook 模式下**不产生 cell，但会消耗一次执行号**。
 | `FangSong` 仿宋 | `FangSong` | ✅ 完整字符集 |
 | `SimSun` 宋体 | `SimSun` | ✅ 完整字符集 |
 | `KaiTi` 楷体 | `KaiTi` | ✅ 完整字符集 |
-| `Droid Sans Fallback` | `Droid Sans Fallback` | ❌ 仅 CJK，无 ASCII 字形 |
-| `WenQuanYi Micro Hei` | - | ❌ 未安装 |
 
 **在 Jupyter kernel 中作图的正确姿势：**
 
@@ -255,7 +180,7 @@ matplotlib.rcParams['axes.unicode_minus'] = False       # 解决负号显示问�
 - 绘图用 `source(echo = TRUE)` 也能正常渲染到 RStudio Plots 面板
 - **⚠️ `run_code` 裸表达式不回显**：`eval()` 不做 Console 自动打印，`run_code('getwd()')` 只回「✅ 执行成功」。必须用 `cat()`/`print()` 显式输出；多行分析走 `source(..., echo=TRUE)`（此时 `print.eval` 自动生效）。
 
-### ⚠️ R 作图：回显 Plots 面板的正确姿势（2026.9.30 实测）
+### ⚠️ R 作图：回显 Plots 面板的正确姿势
 
 **核心：不要打开显式设备，直接 `print(p)` 走默认设备 RStudioGD。**
 
@@ -273,7 +198,7 @@ png("out.png");     print(p); dev.off()
 - 脚本开头建议 `graphics.off()` 清掉遗留的显式设备（否则 `dev.cur()` 可能仍是 `agg_png`）
 - 执行方式仍按可见模式：写入 `~/.dsh/workspace/R/xxx.R` 后 `source(file.path(WS, "R/xxx.R"), echo = TRUE)`
 
-### ⚠️ R 作图：中文字体只能用 `SimSun`（2026.9.30 实测）
+### ⚠️ R 作图：中文字体只能用 `SimSun`
 
 **RStudioGD 设备上，`SimHei` / `黑体` 都解析不到，会静默回退成 `sans` 并打印警告：**
 
@@ -281,31 +206,6 @@ png("out.png");     print(p); dev.off()
 font family 'SimHei' not found, will use 'sans' instead
 ```
 
-实测各 family 在 RStudioGD 上的解析结果：
-
-| family | RStudioGD 是否可解析 |
-|---|---|
-| **`SimSun`** | ✅ **可解析，无警告 —— 推荐** |
-| `sans` | ✅（实际回退字体 → uming.ttc） |
-| `wqy-microhei` | ⚠️ 未实测（match_font 命中 ≠ 可渲染） |
-| `SimHei` / `黑体` / `simhei` / `Hei` | ❌ 回退 |
-| `SimSun`(中文名`宋体`) / `NSimSun` / `FangSong` / `KaiTi` | ❌ 回退 |
-| `Droid Sans Fallback` | ❌ 回退 |
-
-> 原因：`simhei.ttf` 的**内部 family 名只有中文「黑体」**，RStudioGD 按内部 family 名匹配，
-> 而 `fc-match SimHei` 能命中只是 fontconfig 的别名机制——两者不是一回事。
-> `simsun.ttc` 内部 family 名是英文 `SimSun`，故可解析。
->
-> **可靠判据（勿用 `fc-match` / `systemfonts::match_font()`，两者会假阳性）**——渲染期捕获 warning：
-> ```r
-> warns <- character()
-> png(tempfile(fileext = ".png"))
-> withCallingHandlers(print(p),
->   warning = function(e) { warns <<- c(warns, conditionMessage(e)); invokeRestart("muffleWarning") })
-> dev.off()
-> sum(grepl("font family|not found", warns))   # 0 = 真在用
-> ```
->
 > 这与上面 **Python 侧用 `SimHei`** 的结论不同：matplotlib 走 fontconfig/字体文件路径，
 > R 的 RStudioGD 走内部 family 名。**R 用 `SimSun`，Python 用 `SimHei`，不要混用。**
 
@@ -321,44 +221,11 @@ theme_cn <- theme_minimal(base_family = "SimSun", base_size = 12) +
         legend.title  = element_text(family = "SimSun"))
 ```
 
-### ⚠️ RMariaDB 把 BIGINT 返回成 raw
+### ⚠️ RMariaDB 的 BIGINT 返回 `integer64`（不是 raw）
 
-`SELECT COUNT(*)` 这类 BIGINT 列经 RMariaDB 回来是 **raw 向量**，直接 `as.numeric()` 会得到
-`4.94e-324` 这种垃圾值（实为 1）。两种解法：
+`SELECT COUNT(*)` 返回 `bit64::integer64`，**值是正确的**——`as.numeric()` / `print()` / `as.character()` 都正常。
+唯一注意：**别用 `cat()` 直接打印**（会按底层 double 显示成 `4.94e-324` 假象），取数用 `as.numeric(x)` 即可，无需 SQL 侧 CAST 或 R 侧还原 raw。
 
-```r
-# 方案A：SQL 侧转 DOUBLE（推荐，最省事）
-dbGetQuery(con, "SELECT CAST(COUNT(*) AS DOUBLE) n FROM t")
-
-# 方案B：R 侧按小端序还原 raw
-num1 <- function(x) {
-  if (is.raw(x)) { if (!length(x)) return(0); sum(as.numeric(x) * 256^(seq_along(x)-1)) }
-  else as.numeric(x)
-}
-```
-
-### ⚠️ MySQL FLOAT(float32) 列：R 与 Python 取回值不同（驱动协议差异）
-
-**现象（2026-09-30 实测）：** 同一张表的 `building_area`（MySQL 类型 `float`），
-R 侧是 `42.549999237060546875`，Python 侧是 `42.55`，单值最大相对差 ≈ **5.7e-08**。
-聚合后多行分组差异被平均到 < 1e-12，**只有单行分组（n=1）会暴露全量 1e-8** ——
-极易被误判成「分析结论不一致」。
-
-**根因：** 两个驱动对同一个 float32 的呈现方式不同。
-
-| 驱动 | 协议 | float32 → double |
-|---|---|---|
-| **RMariaDB**（R） | 二进制协议 | 原样升位：`42.55` → `42.549999237060546875` |
-| **PyMySQL/SQLAlchemy**（Python） | 文本协议 | MySQL 按 `FLT_DIG=6` 输出 `"42.55"` → 解析回 `42.55` |
-
-**判据（已 2000 行抽样逐值证实）：** 把 R 值按 6 位有效数字舍入后与 Python 值比较，
-**2000/2000 完全相等** ⇒ 差异纯属协议，非数据/通道/分析错误。
-（`deal_price` 因 6 位有效数字即可精确往返，实测 2000/2000 逐位相等。）
-
-**工程建议：**
-- 比较 R↔Python 的 `float` 列时**容差取 `1e-7`**，勿用 `1e-9` 或精确相等
-- 需要精确一致：SQL 侧显式 `CAST(col AS DOUBLE)`，或建表就用 `DOUBLE` 而非 `FLOAT`
-- 对账脚本范例：`R/verify_r2py_channel.R` + `py/verify_r2py_channel.py`
 
 ### ⚠️ 长输出超限 → 用 `run_with_sink.R` 落盘
 
@@ -371,32 +238,6 @@ run_with_sink("/home/ubuntu/.dsh/workspace/R/analyze_shanghai_housing.R")
 # 或显式指定输出文件：
 run_with_sink("/home/ubuntu/.dsh/workspace/R/analyze_shanghai_housing.R",
               "/home/ubuntu/.dsh/workspace/R/analyze_output.txt")
-```
-
-> **已修复（2026.9.30，commit `c0737a3`）：** 早前 R API 的「200 行硬截断 + 报错误报成功/丢输出」
-> 两个 bug 已修——现在报错会返回 `❌ 执行出错` + 错误信息 + 报错前的输出，输出上限提到
-> 2000 行（可配置）。只有超过上限（或确需落盘）才需要 sink。Python 侧（jupyter-mcp）
-> 始终无行数上限、直接 print 即可。
-
-### ⚠️ Python 侧：`.py + Console` 模式不落盘
-
-`.py + Console` 模式下 `run_code` **不修改 `.py` 文件**（见上文说明），
-代码只存在于 Console 历史里——**kernel 一重启分析就没了**。
-需要可复现时，另外把脚本写盘管理（本仓库放在 `~/.dsh/workspace/py/`，
-与 R 的 `R/` 子目录对称）：
-
-```
-~/.dsh/workspace/py/analyze_shanghai_housing.py   # 对应 R/ 下三个脚本的 Python 版
-```
-
-**验证 matplotlib 中文确实生效的方法**（比看墨迹占比可靠）：
-
-```python
-from matplotlib import font_manager as fm
-from matplotlib.font_manager import FontProperties
-fm.findfont(FontProperties(family="SimHei"), fallback_to_default=False)
-# -> /usr/share/fonts/myfonts/simhei.ttf   ✅ 真在用
-# 对照：family="DejaVu Sans" 渲染中文会报 26 条 "Glyph xxxxx missing from font"
 ```
 
 ### ⚠️ 变量名禁区（会被 API 误用为函数而 500）
@@ -423,16 +264,7 @@ R API 辅助函数住在 `.GlobalEnv`，**给变量起下面这些名字会直�
 ### ⚠️ 注意事项：`rm(list=ls())` 会清掉 API 函数
 R API 的辅助函数（`safe_eval`、`ok`、`err`、`server` 等）存储在 `.GlobalEnv` 中。如果用户在 RStudio Console 中执行 `rm(list=ls())`，API 处理器会被一并清除，需重新 `source("r-session-ai/r-session-api.R")` 恢复。
 
-### 多用户验证（2026.6.6）
-
-**结果：方案表现完美 ✅**
-
-- 每个用户的 RSession 是独立 OS 进程，httpuv 各自绑定不同端口，互不干扰
-- `httpuv::stopServer(server)` 有效但无声，`stopAllServers()` 也支持
-- `httpuv::stopAllServers()` 在另一个 R Session 中调用不会影响当前 R Session
-- 适合多用户并行使用，隔离性可靠
-
-### 安全加固：R API Token 认证（2026.6.7）
+### 安全加固：R API Token 认证
 
 **背景：** 多用户场景下，R API 绑定 127.0.0.1 但所有本地用户可访问。恶意用户可扫描端口后
 `curl http://127.0.0.1:<port>/eval` 执行任意 R 代码，劫持其他用户的 R session。
@@ -479,7 +311,7 @@ curl -H "Authorization: Bearer <token>" http://127.0.0.1:<port>/health
 
 ---
 
-## R ↔ Python 双向数据交换 (2026.6.7 最终版)
+## R ↔ Python 双向数据交换
 
 两个 MCP Server（r-session + jupyter-mcp）各有一对 `export_data` / `import_data` 工具，通过 CSV 文件实现 R Session 和 Jupyter Kernel 之间的数据交换。
 
@@ -509,24 +341,6 @@ Jupyter Kernel ← jupyter-mcp (Python) ← CSV
 |---|---|
 | `export_data(name)` | Python 侧 `pandas.to_csv()` 写 CSV |
 | `import_data(path, var_name)` | Python 侧 `pandas.read_csv()` 读 CSV |
-
-### 类型保真实测结果
-
-**Python → R（`fread`）— 所有类型无损 ✅**
-| Python | R | CSV 中间格式 |
-|---|---|---|
-| int64 | integer | `1` |
-| float64 | numeric | `10.5` |
-| object (str) | character | `Alice` |
-| bool | logical | `True` / `False` |
-| datetime64 (日期) | IDate/Date | `2026-06-07` |
-| datetime64 (时间) | POSIXct | `2026-06-07 10:30:00` |
-
-**R → Python（`read_csv`）— 日期/时间丢字符串 ❌**
-| R | Python | 处理 |
-|---|---|---|
-| integer/num/char/logical | int64/float64/object/bool | 自动认 ✅ |
-| Date / POSIXct | object (string) | `pd.to_datetime(df['col'])` 修复 |
 
 ### 共享目录
 - **默认位置：** `~/.dsh/workspace/r2py/`（DSH 下由 `cordis.patch.yml` 的 `R2PY_SHARED_DIR` 指定，须写绝对路径）
@@ -579,7 +393,7 @@ sales.to_csv("r2py/sales_export.csv", index=False)
 | **导出数据** | `fwrite()` 写在 `.R` 脚本中 | `df.to_csv()` 写在 `run_code` 里 | `df.to_csv()` 写在 `run_code` 里 |
 | **导入数据** | `fread()` 写在 `.R` 脚本中 | `pd.read_csv()` 写在 `run_code` 里 | `pd.read_csv()` 写在 `run_code` 里 |
 
-> **关于 MCP 工具的 Console 可见性（2026-06-07 优化后）：**
+> **关于 MCP 工具的 Console 可见性：**
 > `export_data` / `import_data` 内部通过 kernel `execute_request` 执行代码，会触发 `execute_input` 消息。
 > - `.py + Console` 模式：`console-adopt` 捕获后生成 Console CodeCell，**各 1 个**（已合并多余验证步骤）
 > - Notebook 模式：MCP 工具操作不写入 .ipynb 文件，**不会产生 Cell**
