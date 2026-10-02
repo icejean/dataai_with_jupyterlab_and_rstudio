@@ -1,4 +1,4 @@
-# Data AI [English](./README.en.md)
+# Data AI [English](./README.en.md) · [第三方后端 DIY 接入](./docs/agent-backend-todo.md)
 
 > OpenClaw / DeepSeek Harness / Claude Code with Jupyter Lab and Rstudio
 
@@ -397,8 +397,6 @@ cd <仓库目录> && claude
 ```
 
 完整安装、配置、启动步骤见 [claude_code/README.md](./claude_code/README.md)。
-
-> 💡 想接入更多国内 Coding Agent 后端（Qwen Code / Kimi Code / MiniMax / CodeBuddy / MiMo 等）？只要支持 MCP client 即可 DIY 接入——见 [第三方后端接入清单](./docs/agent-backend-todo.md) 与 [DIY 接入指南](./docs/diy-backend-integration-guide.md)。
 
 #### 2. 浏览器建议
 
