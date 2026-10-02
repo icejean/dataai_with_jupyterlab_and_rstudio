@@ -18,6 +18,8 @@ The "AI Brain" layer is **pluggable**: the agent only handles conversation + cal
 
 ## Candidate Checklist
 
+> The list below is **non-exhaustive and provided by way of example only** — it is not limited to the backends listed. Any coding agent with MCP client support can be integrated into DataAI; omission does not imply lack of support or fit. Feel free to integrate any unlisted backend via the [DIY Integration Guide](diy-backend-integration-guide.en.md).
+
 Legend:
 
 - **License**: Open source = freely integrable into the open-source DataAI line; closed-source free = free for personal use, commercial licensing requires separate negotiation

@@ -18,6 +18,8 @@ DataAI 现有三个**内置**后端，共用同一对 stdio MCP Server（`jupyte
 
 ## 候选清单
 
+> 以下清单为**举例，包括但不限于**所列后端。任何支持 MCP client 的 Coding Agent 均可接入 DataAI；未列出的后端不代表不支持或不适合，只是未收录，欢迎自行按 [DIY 接入指南](diy-backend-integration-guide.md) 接入。
+
 图例：
 
 - **许可**：开源 = 可自由集成到开源 DataAI 线；闭源免费 = 个人版免费、商业授权需另议
