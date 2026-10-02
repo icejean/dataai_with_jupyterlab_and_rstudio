@@ -79,7 +79,7 @@ DataAI 现有三个**内置**后端，共用同一对 stdio MCP Server（`jupyte
 > - **次强**：MiniMax Code CLI（④ 待确认）、Qwen Code（④ 走 hook additionalContext）、Codex CLI（④ 的 `model_instructions_file` 新 session 才读，与恢复注入冲突，需 patch）
 > - **不达标**：Gemini CLI（headless 无 `--resume`）、OpenCode / MiMo-Code（偏 TUI 前台 + 靠 hook）
 >
-> 与 DSH 的对照：session-id 恢复（②）这些开源 CLI **原生就有**（`-r` / `--session` / `exec resume`），不像 DSH 那样需要 patch；真正可能要 patch 的是 **④ 动态注入 context**——只有 Goose（MOIM）与 Kimi（`--system-prompt` / AGENTS.md）开箱即用，其余（Qwen hook、Codex）需开发。
+> 与 DSH 的对照：session-id 恢复（②）这些开源 CLI **原生就有**（`-r` / `--session` / `exec resume`），不像 DSH 那样需要 patch（DSH 的 session-id patch 解决方案见 [deepseek-ai/deepseek-harness discussions/3518](https://github.com/deepseek-ai/deepseek-harness/discussions/3518)）；真正可能要 patch 的是 **④ 动态注入 context**——只有 Goose（MOIM）与 Kimi（`--system-prompt` / AGENTS.md）开箱即用，其余（Qwen hook、Codex）需开发。
 
 ## 优先级说明
 

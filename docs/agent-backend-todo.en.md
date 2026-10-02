@@ -79,7 +79,7 @@ Legend:
 > - **Strong**: MiniMax Code CLI (④ TBD), Qwen Code (④ via hook additionalContext), Codex CLI (④'s `model_instructions_file` is only read on new sessions, conflicting with post-resume injection — needs patch)
 > - **Not ready**: Gemini CLI (no headless `--resume`), OpenCode / MiMo-Code (TUI-foreground + hook-dependent)
 >
-> Vs. DSH: session-id resume (②) is **native** in these open-source CLIs (`-r` / `--session` / `exec resume`) — no patch needed as with DSH; the real patch surface is **④ dynamic context injection** — only Goose (MOIM) and Kimi (`--system-prompt` / AGENTS.md) work out of the box, the rest (Qwen hook, Codex) need development.
+> Vs. DSH: session-id resume (②) is **native** in these open-source CLIs (`-r` / `--session` / `exec resume`) — no patch needed as with DSH (DSH's session-id patch solution: [deepseek-ai/deepseek-harness discussions/3518](https://github.com/deepseek-ai/deepseek-harness/discussions/3518)); the real patch surface is **④ dynamic context injection** — only Goose (MOIM) and Kimi (`--system-prompt` / AGENTS.md) work out of the box, the rest (Qwen hook, Codex) need development.
 
 ## Priority Notes
 
