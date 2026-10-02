@@ -53,6 +53,34 @@ DataAI 现有三个**内置**后端，共用同一对 stdio MCP Server（`jupyte
 
 > 国外后端同样遵循「支持 MCP client 即可接入」的判据。**OpenCode** 是 MiMo-Code 的上游（小米 MiMo 即其 fork），社区最活跃、BYOK 75+ 模型；**Gemini CLI** / **Goose** / **Codex CLI** 均开源且 MCP 成熟；**Crush**（Charm）终端体验最佳但许可为 NOASSERTION；**Aider** 偏 git-native、MCP 为部分支持。国外后端默认接国外模型，同样可 BYOK 指向国内 LLM（DeepSeek / GLM 等）。
 
+## Portal 可接入性评估
+
+> 面向**闭源 DataAI Portal** 的额外维度。Portal 把 Agent 当 headless 服务调度（每请求一进程、多会话、动态 context），除「支持 MCP client」外还需满足 5 点：
+
+1. **headless / CLI 单次启动** —— Portal 每次请求起一个进程、跑完返回
+2. **指定 session ID 恢复上下文** —— Portal 维护会话，每次请求带 id 续上文
+3. **conversation 跨进程持久化** —— 进程结束 session 落盘，下次新进程能续
+4. **恢复后动态注入 context** —— 把 DataAI 当前 kernel / 语言 / workspace 状态注入
+5. **MCP Server 作为独立子进程** —— jupyter-mcp / r-session 随 Agent 启动、Agent 结束一起退出
+
+| 后端 | ①headless | ②session-id 恢复 | ③跨进程持久化 | ④动态注入 context | ⑤MCP 子进程 | 结论 |
+|---|---|---|---|---|---|---|
+| **Kimi Code CLI** | ✅ | ✅ | ✅ | ✅ | ✅ | 首推 |
+| **Goose** | ✅ | ✅ | ✅ | ✅✅ | ⚠️ | 国外首推 |
+| **MiniMax Code CLI** | ✅ | ✅ | ✅ | ❓ | ✅ | 次强 |
+| **Qwen Code** | ✅ | ✅ | ✅ | ⚠️ | ✅ | 需 hook |
+| **Codex CLI** | ✅ | ⚠️ | ✅ | ⚠️ | ✅ | 需 patch |
+| **Gemini CLI** | ✅ | ❌ | ⚠️ | ⚠️ | ✅ | 不达标 |
+| **OpenCode** | ⚠️ | ⚠️ | ✅ | ⚠️ | ✅ | 需 hook 开发 |
+| **MiMo-Code** | ❌ | ✅ | ✅ | ❌ | ⚠️ | 不达标 |
+
+> 梯队结论：
+> - **首推**：Kimi Code CLI（①–⑤ 原生，`resume_hint` 回传 session_id + resume 命令，最贴合 Portal 的 id→resume 闭环）；Goose（④ 用 `GOOSE_MOIM_MESSAGE_*` 每轮注入，动态 context 最强，但 provider 层有 drop system prompt 的已知 bug）
+> - **次强**：MiniMax Code CLI（④ 待确认）、Qwen Code（④ 走 hook additionalContext）、Codex CLI（④ 的 `model_instructions_file` 新 session 才读，与恢复注入冲突，需 patch）
+> - **不达标**：Gemini CLI（headless 无 `--resume`）、OpenCode / MiMo-Code（偏 TUI 前台 + 靠 hook）
+>
+> 与 DSH 的对照：session-id 恢复（②）这些开源 CLI **原生就有**（`-r` / `--session` / `exec resume`），不像 DSH 那样需要 patch；真正可能要 patch 的是 **④ 动态注入 context**——只有 Goose（MOIM）与 Kimi（`--system-prompt` / AGENTS.md）开箱即用，其余（Qwen hook、Codex）需开发。
+
 ## 优先级说明
 
 1. **Qwen Code / Kimi Code CLI（★★★）**：开源、terminal-first、MCP client 成熟、`mcp add` 子命令齐全，形态最贴近现有 Claude Code 后端，接入成本最低；国内用户用本土账号/模型零门槛。

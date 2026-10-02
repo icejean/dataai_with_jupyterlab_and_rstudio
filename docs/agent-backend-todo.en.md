@@ -53,6 +53,34 @@ Legend:
 
 > International backends follow the same "MCP client support is enough" rule. **OpenCode** is MiMo-Code's upstream (Xiaomi's MiMo is a fork of it), the most active community with BYOK 75+ models; **Gemini CLI** / **Goose** / **Codex CLI** are all open source with mature MCP; **Crush** (Charm) has the best terminal experience but a NOASSERTION license; **Aider** is git-native with only partial MCP support. International backends default to international models, and can equally BYOK-point to domestic LLMs (DeepSeek / GLM, etc.).
 
+## Portal Integration Assessment
+
+> An extra dimension for the **closed-source DataAI Portal**. Portal drives agents as headless services (one process per request, multiple sessions, dynamic context), so beyond "MCP client support" it additionally requires five things:
+
+1. **Headless / one-shot CLI launch** — Portal spawns a process per request, returns when done
+2. **Resume by session ID** — Portal keeps sessions; each request passes an id to continue
+3. **Cross-process conversation persistence** — the session is written to disk and resumable by a new process
+4. **Dynamic context injection after resume** — inject DataAI's current kernel / language / workspace state
+5. **MCP Server as a subprocess** — jupyter-mcp / r-session start with the agent and exit together
+
+| Backend | ①headless | ②session-id resume | ③cross-process persist | ④dynamic inject | ⑤MCP subprocess | Verdict |
+|---|---|---|---|---|---|---|
+| **Kimi Code CLI** | ✅ | ✅ | ✅ | ✅ | ✅ | Top pick |
+| **Goose** | ✅ | ✅ | ✅ | ✅✅ | ⚠️ | Top pick (intl) |
+| **MiniMax Code CLI** | ✅ | ✅ | ✅ | ❓ | ✅ | Strong |
+| **Qwen Code** | ✅ | ✅ | ✅ | ⚠️ | ✅ | Needs hook |
+| **Codex CLI** | ✅ | ⚠️ | ✅ | ⚠️ | ✅ | Needs patch |
+| **Gemini CLI** | ✅ | ❌ | ⚠️ | ⚠️ | ✅ | Not ready |
+| **OpenCode** | ⚠️ | ⚠️ | ✅ | ⚠️ | ✅ | Needs hook dev |
+| **MiMo-Code** | ❌ | ✅ | ✅ | ❌ | ⚠️ | Not ready |
+
+> Tiering:
+> - **Top picks**: Kimi Code CLI (①–⑤ native; `resume_hint` returns session_id + resume command, ideal for Portal's id→resume loop); Goose (④ uses `GOOSE_MOIM_MESSAGE_*` per-turn injection, the strongest dynamic context, but a known provider-layer bug can drop the system prompt)
+> - **Strong**: MiniMax Code CLI (④ TBD), Qwen Code (④ via hook additionalContext), Codex CLI (④'s `model_instructions_file` is only read on new sessions, conflicting with post-resume injection — needs patch)
+> - **Not ready**: Gemini CLI (no headless `--resume`), OpenCode / MiMo-Code (TUI-foreground + hook-dependent)
+>
+> Vs. DSH: session-id resume (②) is **native** in these open-source CLIs (`-r` / `--session` / `exec resume`) — no patch needed as with DSH; the real patch surface is **④ dynamic context injection** — only Goose (MOIM) and Kimi (`--system-prompt` / AGENTS.md) work out of the box, the rest (Qwen hook, Codex) need development.
+
 ## Priority Notes
 
 1. **Qwen Code / Kimi Code CLI (★★★)**: open source, terminal-first, mature MCP client, full `mcp add` subcommands, closest to the existing Claude Code backend and cheapest to integrate; domestic users get zero-friction access with local accounts/models.
