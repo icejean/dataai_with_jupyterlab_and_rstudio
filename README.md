@@ -321,16 +321,16 @@ R Session                    CSV 文件                    Jupyter Kernel
 
 ## 场景示例
 
-| 场景               | Python (jupyter-mcp)    | R (r-session) |
-|--------------------|-------------------------|---------------|
-| 数据清洗、ETL      | ✅ pandas               |               |
-| 统计分析、回归建模 |                         | ✅ lm, glm    |
-| 可视化（交互式）   | ✅ plotly               | ✅ ggplot2    |
-| 可视化（出版级）   |                         | ✅ ggplot2    |
-| 机器学习（传统）   | ✅ sklearn              |               |
-| 深度学习           | ✅ PyTorch / TensorFlow |               |
-| 时间序列分析       |                         | ✅ forecast   |
-| 报表生成           | ✅ nbconvert            | ✅ rmarkdown  |
+| 场景               | Python (jupyter-mcp)      | R (r-session)          |
+|--------------------|---------------------------|------------------------|
+| 数据清洗、ETL      | ✅ pandas                 | ✅ dplyr / tidyr       |
+| 统计分析、回归建模 | ✅ statsmodels / scipy    | ✅ lm, glm             |
+| 可视化（交互式）   | ✅ plotly                 | ✅ plotly / highcharter |
+| 可视化（出版级）   | ✅ matplotlib / seaborn   | ✅ ggplot2             |
+| 机器学习（传统）   | ✅ sklearn                | ✅ tidymodels / mlr3   |
+| 深度学习           | ✅ PyTorch / TensorFlow   | ✅ rtorch              |
+| 时间序列分析       | ✅ statsmodels / prophet  | ✅ forecast            |
+| 报表生成           | ✅ nbconvert              | ✅ rmarkdown           |
 
 ------------------------------------------------------------------------
 

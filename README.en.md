@@ -324,16 +324,16 @@ Filename: UUID prefix + .csv
 
 ## Use Case Matrix
 
-| Scenario                         | Python (jupyter-mcp)    | R (r-session) |
-|----------------------------------|-------------------------|---------------|
-| Data cleaning, ETL               | ✅ pandas               |               |
-| Statistical analysis, regression |                         | ✅ lm, glm    |
-| Visualization (interactive)      | ✅ plotly               | ✅ ggplot2    |
-| Visualization (publication)      |                         | ✅ ggplot2    |
-| ML (classical)                   | ✅ sklearn              |               |
-| Deep learning                    | ✅ PyTorch / TensorFlow |               |
-| Time series                      |                         | ✅ forecast   |
-| Report generation                | ✅ nbconvert            | ✅ rmarkdown  |
+| Scenario                         | Python (jupyter-mcp)     | R (r-session)          |
+|----------------------------------|--------------------------|------------------------|
+| Data cleaning, ETL               | ✅ pandas                | ✅ dplyr / tidyr       |
+| Statistical analysis, regression | ✅ statsmodels / scipy   | ✅ lm, glm             |
+| Visualization (interactive)      | ✅ plotly                | ✅ plotly / highcharter |
+| Visualization (publication)      | ✅ matplotlib / seaborn  | ✅ ggplot2             |
+| ML (classical)                   | ✅ sklearn               | ✅ tidymodels / mlr3   |
+| Deep learning                    | ✅ PyTorch / TensorFlow  | ✅ rtorch              |
+| Time series                      | ✅ statsmodels / prophet | ✅ forecast            |
+| Report generation                | ✅ nbconvert             | ✅ rmarkdown           |
 
 ------------------------------------------------------------------------
 
