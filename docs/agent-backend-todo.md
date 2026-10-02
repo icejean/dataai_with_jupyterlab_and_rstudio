@@ -66,7 +66,7 @@ DataAI 现有三个**内置**后端，共用同一对 stdio MCP Server（`jupyte
 | 后端 | ①headless | ②session-id 恢复 | ③跨进程持久化 | ④动态注入 context | ⑤MCP 子进程 | 结论 |
 |---|---|---|---|---|---|---|
 | **Kimi Code CLI** | ✅ | ✅ | ✅ | ✅ | ✅ | 首推 |
-| **Goose** | ✅ | ✅ | ✅ | ✅✅ | ⚠️ | 国外首推 |
+| **Goose** | ✅ | ✅ | ✅ | ✅ | ⚠️ | 国外首推 |
 | **MiniMax Code CLI** | ✅ | ✅ | ✅ | ❓ | ✅ | 次强 |
 | **Qwen Code** | ✅ | ✅ | ✅ | ⚠️ | ✅ | 需 hook |
 | **Codex CLI** | ✅ | ⚠️ | ✅ | ⚠️ | ✅ | 需 patch |

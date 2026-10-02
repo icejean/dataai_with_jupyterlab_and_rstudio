@@ -66,7 +66,7 @@ Legend:
 | Backend | ①headless | ②session-id resume | ③cross-process persist | ④dynamic inject | ⑤MCP subprocess | Verdict |
 |---|---|---|---|---|---|---|
 | **Kimi Code CLI** | ✅ | ✅ | ✅ | ✅ | ✅ | Top pick |
-| **Goose** | ✅ | ✅ | ✅ | ✅✅ | ⚠️ | Top pick (intl) |
+| **Goose** | ✅ | ✅ | ✅ | ✅ | ⚠️ | Top pick (intl) |
 | **MiniMax Code CLI** | ✅ | ✅ | ✅ | ❓ | ✅ | Strong |
 | **Qwen Code** | ✅ | ✅ | ✅ | ⚠️ | ✅ | Needs hook |
 | **Codex CLI** | ✅ | ⚠️ | ✅ | ⚠️ | ✅ | Needs patch |
