@@ -27,6 +27,17 @@ DataAI 的「AI 大脑」是插拔式的。三个内置后端（OpenClaw / DSH /
 
 > TUI 还是 GUI 不重要，能调 MCP Server 就行。但 RStudio 和 JupyterHub/JupyterLab 必须跑在 Linux 服务器上——这条是 DataAI 的核心要求，DIY 时不变。
 
+### 为什么优先 TUI
+
+DataAI 的工作台是浏览器里的 **JupyterLab + RStudio**，两者都自带 **Terminal 页面**（JupyterLab 的 Terminal 面板、RStudio Server 的 Terminal 面板）。TUI Agent 可以直接在这个内置终端里启动：打开浏览器 → 进 Terminal 页 → 运行 `openclaw chat` / `dsh` / `claude` / 你接的任意 TUI Agent，全程**不需要额外安装 SSH 客户端、桌面环境或 IDE 插件**。
+
+相比之下：
+
+- **GUI / IDE 型 Agent** 需要另装桌面或 IDE——DataAI 是「服务器 + 浏览器」架构，没有桌面环境，天然不适合
+- **纯 headless CLI**（只有 `-p` 单次执行、无交互 TUI）能用，但缺交互式指挥体验
+
+所以候选清单里「TUI / CLI」形态的优先级天然更高——这正是现有三个后端（OpenClaw / DSH / Claude Code）全部终端原生的原因。
+
 ## 2. 前置：先让 MCP 那侧就绪
 
 接入任何 Agent 之前，先把 DataAI 两个 MCP Server 的依赖侧跑起来（与现有后端完全一致）：

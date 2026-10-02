@@ -27,6 +27,17 @@ Three conditions, all must hold (**applies to both domestic and international ba
 
 > TUI or GUI doesn't matter — being able to call MCP Servers does. But RStudio and JupyterHub/JupyterLab must run on a Linux server — that's DataAI's core requirement, unchanged during DIY.
 
+### Why TUI Comes First
+
+DataAI's workbench is the browser-based **JupyterLab + RStudio**, both of which ship a built-in **Terminal page** (JupyterLab's Terminal panel, RStudio Server's Terminal panel). A TUI agent launches directly in that embedded terminal: open the browser → go to the Terminal page → run `openclaw chat` / `dsh` / `claude` / any TUI agent you've plugged in — **no SSH client, desktop environment, or IDE plugin required**.
+
+By contrast:
+
+- **GUI / IDE agents** need a separate desktop or IDE — DataAI is a "server + browser" architecture with no desktop environment, so they don't fit naturally
+- **pure headless CLIs** (only `-p` one-shot execution, no interactive TUI) work, but lack the interactive steering experience
+
+That's why "TUI / CLI" form factors rank higher in the checklist — which is exactly why the three existing backends (OpenClaw / DSH / Claude Code) are all terminal-native.
+
 ## 2. Prerequisites: Get the MCP Side Ready First
 
 Before integrating any agent, first start the dependency side of DataAI's two MCP Servers (identical to the existing backends):
