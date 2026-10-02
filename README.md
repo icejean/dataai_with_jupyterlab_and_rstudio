@@ -358,6 +358,7 @@ cd dataai_with_jupyterlab_and_rstudio
 | `r-session-ai/` | [README.md](./r-session-ai/README.md) | R API 启动与 MCP 配置 |
 | `dsh/` | [README.md](./dsh/README.md) | DeepSeek Harness (DSH) 后端安装与配置 |
 | `claude_code/` | [README.md](./claude_code/README.md) | Claude Code 后端安装与配置 |
+| `docs/` | [agent-backend-todo.md](./docs/agent-backend-todo.md) · [diy-backend-integration-guide.md](./docs/diy-backend-integration-guide.md) | 第三方 Coding Agent 后端 DIY 接入 |
 
 > 最小可跑的连接验证脚本见 [`mcp-examples/`](./mcp-examples/)：`r-session.R`（R 端）、`test.py`（console 模式）、`test.ipynb`（Notebook 模式）。
 
@@ -396,6 +397,8 @@ cd <仓库目录> && claude
 ```
 
 完整安装、配置、启动步骤见 [claude_code/README.md](./claude_code/README.md)。
+
+> 💡 想接入更多国内 Coding Agent 后端（Qwen Code / Kimi Code / MiniMax / CodeBuddy / MiMo 等）？只要支持 MCP client 即可 DIY 接入——见 [第三方后端接入清单](./docs/agent-backend-todo.md) 与 [DIY 接入指南](./docs/diy-backend-integration-guide.md)。
 
 #### 2. 浏览器建议
 
