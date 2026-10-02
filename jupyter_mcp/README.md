@@ -1,6 +1,6 @@
-# jupyter-mcp — Jupyter Lab ⟷ AI 助手（OpenClaw / DSH）数据分析桥接
+# jupyter-mcp — Jupyter Lab ⟷ AI 助手（OpenClaw / DSH / Claude Code）数据分析桥接
 
-让 AI 助手（OpenClaw / DSH）直接连接你在 Jupyter Lab 里的 Python kernel，辅助你进行 Python 数据分析。
+让 AI 助手（OpenClaw / DSH / Claude Code）直接连接你在 Jupyter Lab 里的 Python kernel，辅助你进行 Python 数据分析。
 
 ## 架构
 
@@ -51,7 +51,7 @@ hook.register()
 
 如果需要切换到另一个 kernel，就在那个 kernel 的 cell 里重新运行 `hook.register(force=True)`。
 
-### 3. 在 Agent 后端中配置 MCP Server（OpenClaw / DSH，推荐：stdio 模式）
+### 3. 在 Agent 后端中配置 MCP Server（OpenClaw / DSH / Claude Code，推荐：stdio 模式）
 
 在 `openclaw.json` 的 `mcp.servers` 中添加：
 
@@ -78,13 +78,14 @@ hook.register()
 配置完成后重启 Agent 后端即可自动拉起 MCP Server。
 
 > **DSH 后端：** 同一 MCP Server 无需改动，可直接挂到 DSH —— 配置见 [dsh/README.md](../dsh/README.md)。
+> **Claude Code 后端：** 同样可直接挂到 Claude Code —— 配置见 [claude_code/README.md](../claude_code/README.md)。
 
 说明：在多用户模式下，MCP Server的源码可以放在共享的目录中，所有用户对共享目录要有透传的读与执行的权限，这样便于集中管理源码的更新。
 共享MCP Server源码目录时，要包括已经生成的__pycache__目录下的cache文件，因为实际执行的是__pycache__里的文件。
 
 ### 4. 使用
 
-连接到 OpenClaw 后，你可以使用以下工具操作 Jupyter kernel:
+连接到 agent 后端（OpenClaw / DSH / Claude Code）后，你可以使用以下工具操作 Jupyter kernel:
 
 | 工具 | 功能 |
 |------------------------------------|------------------------------------|
@@ -137,4 +138,4 @@ python3 jupyter-mcp-server.py
 
 ## 和 r-session 的关系
 
-两者可以共存。r-session 操作 R，jupyter-mcp 操作 Python kernel，互不干扰。OpenClaw 配置中同时定义两个 MCP Server 即可。
+两者可以共存。r-session 操作 R，jupyter-mcp 操作 Python kernel，互不干扰。agent 后端配置中同时定义两个 MCP Server 即可。

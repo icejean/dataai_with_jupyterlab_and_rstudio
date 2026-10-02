@@ -1,6 +1,6 @@
-# jupyter-mcp — Jupyter Lab ⟷ AI Agents (OpenClaw / DSH) Data Analysis Bridge
+# jupyter-mcp — Jupyter Lab ⟷ AI Agents (OpenClaw / DSH / Claude Code) Data Analysis Bridge
 
-Connect AI agents (OpenClaw / DSH) directly to your Python kernel in Jupyter Lab, enabling AI-assisted Python data analysis.
+Connect AI agents (OpenClaw / DSH / Claude Code) directly to your Python kernel in Jupyter Lab, enabling AI-assisted Python data analysis.
 
 ## Architecture
 
@@ -51,7 +51,7 @@ The `~/.jupyter-mcp/current` file is written; the MCP Server uses it to find the
 
 To switch to a different kernel, run `hook.register(force=True)` in that kernel's cell.
 
-### 3. Configure MCP Server in the Agent Backend (OpenClaw / DSH, Recommended: stdio mode)
+### 3. Configure MCP Server in the Agent Backend (OpenClaw / DSH / Claude Code, Recommended: stdio mode)
 
 Add this to the `mcp.servers` section of your `openclaw.json`:
 
@@ -78,12 +78,13 @@ Add this to the `mcp.servers` section of your `openclaw.json`:
 Once configured, restart the agent backend to automatically start the MCP Server.
 
 > **DSH backend:** The same MCP Server works with DSH unchanged — see [dsh/README.md](../dsh/README.md).
+> **Claude Code backend:** It also works directly with Claude Code — see [claude_code/README.md](../claude_code/README.md).
 
 > **Note for multi-user environments:** The MCP Server source code can be placed in a shared directory accessible to all users, with read and execute permissions, making it easier to centrally manage source updates. When sharing the MCP Server source directory, include the existing `__pycache__` directory and its compiled cache files, since Python actually executes the cached files in `__pycache__`.
 
 ### 4. Usage
 
-After connecting to OpenClaw, you can use the following tools to interact with the Jupyter kernel:
+After connecting to an agent backend (OpenClaw / DSH / Claude Code), you can use the following tools to interact with the Jupyter kernel:
 
 | Tool | Function |
 |----|----|
@@ -136,4 +137,4 @@ The server will automatically read `~/.jupyter-mcp/current` and connect to the k
 
 ## Relationship with r-session
 
-Both can coexist. r-session operates on R, jupyter-mcp operates on the Python kernel — they don't interfere with each other. Simply define both MCP Servers in your OpenClaw configuration.
+Both can coexist. r-session operates on R, jupyter-mcp operates on the Python kernel — they don't interfere with each other. Simply define both MCP Servers in your agent backend configuration.

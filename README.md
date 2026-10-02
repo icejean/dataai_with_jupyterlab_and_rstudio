@@ -2,7 +2,7 @@
 
 > OpenClaw / DeepSeek Harness / Claude Code with Jupyter Lab and Rstudio
 
-一体化的 **Python + R** 双语AI数据分析工作台，以 **AI Agent 为大脑**，串联 **JupyterLab (Python)** 和 **RStudio (R)** 两个交互式分析引擎，通过 **MCP 协议**统一工具接口，实现跨语言数据流无缝流转。支持 **OpenClaw** / **DeepSeek Harness (DSH)** 双 Agent 后端可切换，自然语言指挥，手机、浏览器等多渠道接入。
+一体化的 **Python + R** 双语AI数据分析工作台，以 **AI Agent 为大脑**，串联 **JupyterLab (Python)** 和 **RStudio (R)** 两个交互式分析引擎，通过 **MCP 协议**统一工具接口，实现跨语言数据流无缝流转。支持 **OpenClaw** / **DeepSeek Harness (DSH)** / **Claude Code** 三 Agent 后端可切换，自然语言指挥，手机、浏览器等多渠道接入。
 
 面向**会写代码、随时可从 AI 接手自己分析探索**的专业数据分析师：AI 辅助写代码和分析数据，你负责指挥，也可以随时接管代码、亲自动手。
 对于非技术背景的业务用户，在DataAI的基础上研发了商业化的版本DataAI Portal，浏览器自然语言对话界面AI数据分析，OpenClaw/DSH双Agent、用户与系统双审计、R/Python/SQL/Cypher四语言支持，目前v1.0.0版已经实现单服务器多用户部署，内网部署可以支持150用户以内的中小型政企组织小规模落地应用，具体可以阅读以下的资料[《DataAI-Portal-AI数据分析平台简介.md》](https://github.com/icejean/dataai_with_jupyterlab_and_rstudio/blob/main/docs/DataAI-Portal-AI数据分析平台简介.md)了解。
@@ -11,7 +11,7 @@
 
 ## 为什么做这个
 
-Python 和 R 各有不可替代的生态。传统方案（如 Posit/Quarto）侧重 R 端整合，Python 端依赖 reticulate，体验割裂。这套方案用 **AI Agent（OpenClaw / DeepSeek Harness）做胶水层** + **MCP Server 做连接桥** + **CSV 共享做数据交换**，让两个语言各取所长，在同一平台下顺畅协作。
+Python 和 R 各有不可替代的生态。传统方案（如 Posit/Quarto）侧重 R 端整合，Python 端依赖 reticulate，体验割裂。这套方案用 **AI Agent（OpenClaw / DeepSeek Harness / Claude Code）做胶水层** + **MCP Server 做连接桥** + **CSV 共享做数据交换**，让两个语言各取所长，在同一平台下顺畅协作。
 
 ### 核心优势
 
@@ -21,7 +21,7 @@ Python 和 R 各有不可替代的生态。传统方案（如 Posit/Quarto）侧
 -   🪶 轻量级浏览器界面，易用易部署易维护
 -   🔓 完全开源免费
 -   📊 AI 贯穿 **编码阶段** + **数据分析阶段**
--   🤖 **双 Agent 后端可切换**：OpenClaw（嵌入模式 + 专属工具）/ DeepSeek Harness（国产模型直连、信创原生）
+-   🤖 **三 Agent 后端可切换**：OpenClaw（嵌入模式 + 专属工具）/ DeepSeek Harness（国产模型直连、信创原生）/ Claude Code（接入国内 LLM、Vibe Coding）
 -   🎯 **面向专业数据分析师**：会写代码，AI 起步、你随时接手继续探索
 
 ------------------------------------------------------------------------
@@ -37,7 +37,7 @@ Python 和 R 各有不可替代的生态。传统方案（如 Posit/Quarto）侧
                           └──────────┬───────────┘
                                      │
                           ┌──────────▼───────────┐
-                          │ Agent (OpenClaw/DSH) │  ← AI 大脑
+                          │    Agent (三后端)    │  ← AI 大脑
                           │对话 + 指令路由 + MCP │  ← 所有工具通过 MCP 协议暴露
                           └──┬───────────────┬───┘
                              │               │
@@ -65,7 +65,7 @@ Python 和 R 各有不可替代的生态。传统方案（如 Posit/Quarto）侧
                      └────────────────────────┘
 ```
 
-> **双 Agent 后端：** 图中「AI 大脑」支持 **OpenClaw**（默认）与 **DeepSeek Harness / DSH** 两个可切换后端，二者共用同一对 MCP Server（`jupyter-mcp` + `r-session`），仅在终端启动命令上不同。详见 [dsh/README.md](./dsh/README.md)。
+> **三 Agent 后端：** 图中「AI 大脑」支持 **OpenClaw**（默认）、**DeepSeek Harness / DSH** 与 **Claude Code** 三个可切换后端，三者共用同一对 MCP Server（`jupyter-mcp` + `r-session`），仅在终端启动命令上不同。详见 [dsh/README.md](./dsh/README.md) 与 [claude_code/README.md](./claude_code/README.md)。
 
 ### 两条数据流详解
 
@@ -209,6 +209,11 @@ dataai_with_jupyterlab_and_rstudio/
 │   ├── credentials.yaml.template    #    凭证模板
 │   └── profiles/                    #    dsh-tui profile 模板
 │
+├── claude_code/                     # Claude Code 后端接入
+│   ├── README.md                    #    Claude Code 安装 / 配置 / 启动
+│   ├── mcp.json.template            #    MCP 配置模板（占位符脱敏）
+│   └── settings.json.template       #    LLM 配置模板（占位符脱敏）
+│
 ├── .gitignore
 ├── openclaw/
 │   ├── MEMORY.md                    # ⚠️ OpenClaw AI Agent 长期记忆样本
@@ -218,6 +223,7 @@ dataai_with_jupyterlab_and_rstudio/
 │                                    #   MCP Server / 工具注册配置
 │                                    #   包括 jupyter-mcp、r-session 等连接参数
 │                                    #   克隆后需按自己的环境修改
+├── CLAUDE.md                        # Claude Code 项目级 persona（自动加载）
 └── README.md                        # ← 你在这里
 ```
 
@@ -351,19 +357,21 @@ cd dataai_with_jupyterlab_and_rstudio
 | `jupyter_mcp/` | [README.md](./jupyter_mcp/README.md) | Jupyter MCP 安装与注册 |
 | `r-session-ai/` | [README.md](./r-session-ai/README.md) | R API 启动与 MCP 配置 |
 | `dsh/` | [README.md](./dsh/README.md) | DeepSeek Harness (DSH) 后端安装与配置 |
+| `claude_code/` | [README.md](./claude_code/README.md) | Claude Code 后端安装与配置 |
 
 > 最小可跑的连接验证脚本见 [`mcp-examples/`](./mcp-examples/)：`r-session.R`（R 端）、`test.py`（console 模式）、`test.ipynb`（Notebook 模式）。
 
 ### 推荐使用方式
 
-#### 1. Agent 后端选择（OpenClaw / DSH）
+#### 1. Agent 后端选择（OpenClaw / DSH / Claude Code）
 
-DataAI 支持两个**并列**的 Agent 后端，在 RStudio / JupyterLab 内置 **Terminal** 中直接启动，共用同一对 MCP Server（`jupyter-mcp` + `r-session`）：
+DataAI 支持三个**并列**的 Agent 后端，在 RStudio / JupyterLab 内置 **Terminal** 中直接启动，共用同一对 MCP Server（`jupyter-mcp` + `r-session`）：
 
 | 后端 | 启动命令 | 定位 |
 |---|---|---|
 | **OpenClaw**（默认） | `openclaw chat` | 嵌入模式、`baidu-search` skill、`agent-browser` 等专属工具 |
 | **DeepSeek Harness / DSH** | `dsh --profile dsh-tui`（别名 `dsh-tui` / `dst`） | DeepSeek 原生 harness、信创、国产模型直连 |
+| **Claude Code** | `claude`（在仓库目录） | Anthropic CLI，接入国内 LLM、Vibe Coding |
 
 **OpenClaw** 推荐使用 `openclaw chat` **embedded agent 模式**（非网关/Plugin 模式）：
 
@@ -380,6 +388,14 @@ dsh --profile dsh-tui    # 或别名 dsh-tui / dst
 ```
 
 完整安装、配置、启动步骤见 [dsh/README.md](./dsh/README.md)。
+
+**Claude Code** 用 Anthropic 官方 CLI，接入国内 LLM（DeepSeek 等），Vibe Coding：
+
+``` bash
+cd <仓库目录> && claude
+```
+
+完整安装、配置、启动步骤见 [claude_code/README.md](./claude_code/README.md)。
 
 #### 2. 浏览器建议
 
@@ -499,10 +515,9 @@ jupyter labextension list
 1.  **启动环境：** 打开 JupyterLab 和 RStudio
 2.  **注册 Python 端：** 在 Jupyter cell 中运行 `hook.register()`
 3.  **启动 R API：** 在 RStudio Console 中 `source("r-session-ai/r-session-api.R")`
-4.  **配置 Agent 后端：** 选 OpenClaw 则修改 `openclaw/openclaw.json` 的 MCP Server 参数；选 DSH 则按 [dsh/README.md](./dsh/README.md) 配置 `~/.dsh/`
-5.  配置MEMORY.md：按自己的环境修改 `openclaw/MEMORY.md`
-6.  建议配置Claude Code，Claude可以接入国内LLM，适合配合OpenClaw使用
-7.  **开始分析：** 在 Agent 对话中发号施令
+4.  **配置 Agent 后端：** 选 OpenClaw 则修改 `openclaw/openclaw.json` 的 MCP Server 参数；选 DSH 则按 [dsh/README.md](./dsh/README.md) 配置 `~/.dsh/`；选 Claude Code 则按 [claude_code/README.md](./claude_code/README.md) 配置 `~/.claude/settings.json`（LLM）与 `~/.claude.json`（MCP）
+5.  配置 persona：按自己的环境修改 `openclaw/MEMORY.md`（OpenClaw）/ `dsh/AGENTS.md`（DSH）/ 仓库根 `CLAUDE.md`（Claude Code）
+6.  **开始分析：** 在 Agent 对话中发号施令
 
 > `mcp-examples/` 提供最小可跑连接验证三件套——`r-session.R`（R 端）、`test.py`（console 模式）、`test.ipynb`（Notebook 模式），对应上面第 2、3 步。
 

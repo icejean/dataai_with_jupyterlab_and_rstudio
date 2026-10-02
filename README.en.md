@@ -2,7 +2,7 @@
 
 > OpenClaw / DeepSeek Harness / Claude Code with Jupyter Lab and Rstudio
 
-An integrated **Python + R** bilingual AI data analysis workbench, powered by an **AI Agent** as its brain, connecting **JupyterLab (Python)** and **RStudio (R)** — two interactive analysis engines — through the **MCP protocol** to unify tool interfaces and enable seamless cross-language data flow. Switch between two agent backends — **OpenClaw** / **DeepSeek Harness (DSH)** — and command with natural language, access via mobile phone or browser.
+An integrated **Python + R** bilingual AI data analysis workbench, powered by an **AI Agent** as its brain, connecting **JupyterLab (Python)** and **RStudio (R)** — two interactive analysis engines — through the **MCP protocol** to unify tool interfaces and enable seamless cross-language data flow. Switch between three agent backends — **OpenClaw** / **DeepSeek Harness (DSH)** / **Claude Code** — and command with natural language, access via mobile phone or browser.
 
 Built for **professional data analysts who write code and can take over from the AI** to continue exploring on their own: the AI assists with writing code and analyzing data — you stay in command, and you can take over the code and do it yourself anytime.
 
@@ -12,7 +12,7 @@ For non-technical business users, a commercial version — **DataAI Portal** —
 
 ## Why This Exists
 
-Python and R each have irreplaceable ecosystems. Traditional solutions (like Posit/Quarto) focus on R-side integration, with Python relying on reticulate — a fragmented experience. This solution uses **an AI Agent (OpenClaw / DeepSeek Harness) as the glue layer** + **MCP Server as the bridge** + **CSV sharing for data exchange**, letting both languages play to their strengths and collaborate smoothly on a single platform.
+Python and R each have irreplaceable ecosystems. Traditional solutions (like Posit/Quarto) focus on R-side integration, with Python relying on reticulate — a fragmented experience. This solution uses **an AI Agent (OpenClaw / DeepSeek Harness / Claude Code) as the glue layer** + **MCP Server as the bridge** + **CSV sharing for data exchange**, letting both languages play to their strengths and collaborate smoothly on a single platform.
 
 ### Core Advantages
 
@@ -22,7 +22,7 @@ Python and R each have irreplaceable ecosystems. Traditional solutions (like Pos
 -   🪶 Lightweight browser interface, easy to deploy and maintain
 -   🔓 Fully open source and free
 -   📊 AI in **coding phase** + **data analysis phase**
--   🤖 **Dual agent backends**: OpenClaw (embedded mode + exclusive tools) / DeepSeek Harness (native domestic-model access, IT-infra friendly)
+-   🤖 **Three agent backends**: OpenClaw (embedded mode + exclusive tools) / DeepSeek Harness (native domestic-model access, IT-infra friendly) / Claude Code (domestic LLM access, Vibe Coding)
 -   🎯 **Built for professional data analysts**: you write code — the AI starts, you take over anytime
 
 ------------------------------------------------------------------------
@@ -38,7 +38,7 @@ Python and R each have irreplaceable ecosystems. Traditional solutions (like Pos
                           └──────────┬───────────┘
                                      │
                           ┌──────────▼───────────┐
-                          │ Agent (OpenClaw/DSH) │  ← AI Brain
+                          │ Agent (3 backends)   │  ← AI Brain
                           │Dialog + Route + MCP  │  ← All tools via MCP
                           └──┬───────────────┬───┘
                              │               │
@@ -67,7 +67,7 @@ Python and R each have irreplaceable ecosystems. Traditional solutions (like Pos
                      └────────────────────────┘
 ```
 
-> **Dual agent backend:** the "AI Brain" in the diagram supports two switchable backends — **OpenClaw** (default) and **DeepSeek Harness / DSH** — both sharing the same pair of MCP Servers (`jupyter-mcp` + `r-session`); only the terminal launch command differs. See [dsh/README.md](./dsh/README.md).
+> **Three agent backends:** the "AI Brain" in the diagram supports three switchable backends — **OpenClaw** (default), **DeepSeek Harness / DSH**, and **Claude Code** — all sharing the same pair of MCP Servers (`jupyter-mcp` + `r-session`); only the terminal launch command differs. See [dsh/README.md](./dsh/README.md) and [claude_code/README.md](./claude_code/README.md).
 
 ### Two Data Flow Paths in Detail
 
@@ -211,6 +211,11 @@ dataai_with_jupyterlab_and_rstudio/
 │   ├── credentials.yaml.template    #    Credentials template
 │   └── profiles/                    #    dsh-tui profile templates
 │
+├── claude_code/                     # Claude Code backend integration
+│   ├── README.md                    #    Claude Code install / config / launch
+│   ├── mcp.json.template            #    MCP config template (placeholder, redacted)
+│   └── settings.json.template       #    LLM config template (placeholder, redacted)
+│
 ├── .gitignore
 ├── LICENSE                          # MIT License
 ├── openclaw/
@@ -221,6 +226,7 @@ dataai_with_jupyterlab_and_rstudio/
 │                                    #    MCP Server / tool registration config
 │                                    #    Includes jupyter-mcp, r-session connection params
 │                                    #    Modify for your own environment after cloning
+├── CLAUDE.md                        # Claude Code project-level persona (auto-loaded)
 └── README.md                        # ← You are here
 ```
 
@@ -354,19 +360,21 @@ Subdirectory deployment guides:
 | `jupyter_mcp/` | [README.en.md](./jupyter_mcp/README.en.md) | Jupyter MCP install & register |
 | `r-session-ai/` | [README.en.md](./r-session-ai/README.en.md) | R API startup & MCP config |
 | `dsh/` | [README.md](./dsh/README.md) | DeepSeek Harness (DSH) backend install & config |
+| `claude_code/` | [README.md](./claude_code/README.md) | Claude Code backend install & config |
 
 > Minimal runnable connection-verification scripts: [`mcp-examples/`](./mcp-examples/) — `r-session.R` (R side), `test.py` (console mode), `test.ipynb` (Notebook mode).
 
 ### Recommended Usage
 
-#### 1. Agent Backend Choice (OpenClaw / DSH)
+#### 1. Agent Backend Choice (OpenClaw / DSH / Claude Code)
 
-DataAI supports two **parallel** agent backends, launched directly from the **Terminal** inside RStudio / JupyterLab, both sharing the same pair of MCP Servers (`jupyter-mcp` + `r-session`):
+DataAI supports three **parallel** agent backends, launched directly from the **Terminal** inside RStudio / JupyterLab, all sharing the same pair of MCP Servers (`jupyter-mcp` + `r-session`):
 
 | Backend | Launch command | Positioning |
 |---|---|---|
 | **OpenClaw** (default) | `openclaw chat` | Embedded mode, `baidu-search` skill, `agent-browser` and other exclusive tools |
 | **DeepSeek Harness / DSH** | `dsh --profile dsh-tui` (aliases `dsh-tui` / `dst`) | DeepSeek native harness, IT-infra friendly, direct domestic-model access |
+| **Claude Code** | `claude` (in the repo directory) | Anthropic CLI, domestic LLM access, Vibe Coding |
 
 **OpenClaw** — recommended to use `openclaw chat` in **embedded agent mode** (not gateway/Plugin mode):
 
@@ -383,6 +391,14 @@ dsh --profile dsh-tui    # or aliases dsh-tui / dst
 ```
 
 Full install, config, and launch steps: [dsh/README.md](./dsh/README.md).
+
+**Claude Code** — Anthropic's official CLI, with domestic LLM access (DeepSeek etc.) and Vibe Coding:
+
+``` bash
+cd <repo directory> && claude
+```
+
+Full install, config, and launch steps: [claude_code/README.md](./claude_code/README.md).
 
 #### 2. Browser Recommendation
 
@@ -500,10 +516,9 @@ Restart JupyterLab after installation for changes to take effect. For JupyterHub
 1.  **Start the environment:** Open JupyterLab and RStudio
 2.  **Register Python side:** Run `hook.register()` in a Jupyter cell
 3.  **Start R API:** Run `source("r-session-ai/r-session-api.R")` in RStudio Console
-4.  **Configure agent backend:** For OpenClaw, modify MCP Server parameters in `openclaw/openclaw.json`; for DSH, configure `~/.dsh/` per [dsh/README.md](./dsh/README.md)
-5.  **Configure MEMORY.md:** Adapt `openclaw/MEMORY.md` to your environment
-6.  **Configure Claude Code (recommended):** Claude can access domestic LLMs, works well with OpenClaw
-7.  **Start analyzing:** Give commands to the agent via conversation
+4.  **Configure agent backend:** For OpenClaw, modify MCP Server parameters in `openclaw/openclaw.json`; for DSH, configure `~/.dsh/` per [dsh/README.md](./dsh/README.md); for Claude Code, configure `~/.claude/settings.json` (LLM) and `~/.claude.json` (MCP) per [claude_code/README.md](./claude_code/README.md)
+5.  **Configure persona:** Adapt `openclaw/MEMORY.md` (OpenClaw) / `dsh/AGENTS.md` (DSH) / root `CLAUDE.md` (Claude Code) to your environment
+6.  **Start analyzing:** Give commands to the agent via conversation
 
 > `mcp-examples/` provides three minimal connection-verification scripts — `r-session.R` (R side), `test.py` (console mode), `test.ipynb` (Notebook mode) — mapping to steps 2 and 3 above.
 

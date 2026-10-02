@@ -9,6 +9,9 @@ venv/
 .env
 .venv
 
+# ML (catboost training output)
+catboost_info/
+
 # Jupyter
 .ipynb_checkpoints/
 *.ipynb

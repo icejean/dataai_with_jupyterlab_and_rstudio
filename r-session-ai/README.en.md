@@ -1,6 +1,6 @@
 # 🦞 R Session AI — Lightweight Bridge Between R and AI Agents
 
-Run inside RStudio Server, allowing AI agents (OpenClaw / Claude Desktop / any MCP client) to read, analyze, and manipulate data in the current R session — **data never leaves the server**.
+Run inside RStudio Server, allowing AI agents (OpenClaw / DSH / Claude Code / any MCP client) to read, analyze, and manipulate data in the current R session — **data never leaves the server**.
 
 ## Architecture
 
@@ -28,7 +28,7 @@ Run inside RStudio Server, allowing AI agents (OpenClaw / Claude Desktop / any M
                           │ HTTP (127.0.0.1:{R_API_PORT})
                           ▼
 ┌─────────────────────────────────────────────────────────────────────────┐
-│  OpenClaw (main process)                                                │
+│  OpenClaw / DSH / Claude Code (main process)                            │
 │                                                                         │
 │  ┌─ openclaw.json → mcp.servers.r-session ──────────────────────────┐  │
 │  │  command: python3 r-session-mcp-server.py                        │  │
@@ -53,7 +53,7 @@ Run inside RStudio Server, allowing AI agents (OpenClaw / Claude Desktop / any M
 - **Writable**: `POST /eval` code executes directly in `.GlobalEnv`
 - **Local only**: Listens on `127.0.0.1`, data never leaves the server
 - **Token authentication**: All API requests must carry a Bearer Token to prevent unauthorized access
-- **Model agnostic**: Model choice is controlled by the agent backend (OpenClaw / DSH); any model (local or domestic) can be used
+- **Model agnostic**: Model choice is controlled by the agent backend (OpenClaw / DSH / Claude Code); any model (local or domestic) can be used
 
 ------------------------------------------------------------------------
 
@@ -92,7 +92,7 @@ You'll see:
 
 The Console remains usable for normal R operations.
 
-### 3. Configure MCP Server in the Agent Backend (OpenClaw / DSH, Recommended: stdio mode)
+### 3. Configure MCP Server in the Agent Backend (OpenClaw / DSH / Claude Code, Recommended: stdio mode)
 
 Add this to the `mcp.servers` section of your `openclaw.json`:
 
@@ -129,6 +129,7 @@ Add this to the `mcp.servers` section of your `openclaw.json`:
 Restart the agent backend after configuration to automatically start the MCP Server.
 
 > **DSH backend:** The same MCP Server works with DSH unchanged — see [dsh/README.md](../dsh/README.md).
+> **Claude Code backend:** It also works directly with Claude Code — see [claude_code/README.md](../claude_code/README.md).
 
 ### 4. Install Python Dependencies (MCP Server side)
 

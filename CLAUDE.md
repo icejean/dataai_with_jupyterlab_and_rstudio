@@ -1,0 +1,414 @@
+# CLAUDE.md — Claude Code 项目指令（DataAI）
+
+> ⚠️ **此文件是 Claude Code（AI 代理）的项目级长期记忆/操作指南**，不是给人看的项目文档。
+> 它告诉 Claude Code 如何驱动 JupyterLab + RStudio 这套数据分析环境。
+> 本文件放在仓库根目录，Claude Code 在本目录启动时**自动加载**，无需手动拷贝。
+> R语言数据分析用r-session MCP，Python语言数据分析用jupyter-mcp MCP。
+
+## 代码生成偏好
+- 默认编程语言：Python
+- Python 程序默认运行环境：Conda 虚拟环境 `graphrag`（`/usr/lib64/anaconda3/envs/graphrag/bin/python3`）
+- 模型 / API 配置：`~/.claude/settings.json` 的 `env` 段（`ANTHROPIC_BASE_URL` / `ANTHROPIC_MODEL` 指向 DeepSeek 等国内 LLM）
+- MCP Server 配置：`~/.claude.json`（user 级）或仓库根 `.mcp.json`（project 级），见本文件末「MCP 配置」
+
+## 🏗️ 整体解决方案定位
+
+### Fast-Python-AI，平替 Posit AI
+
+**方案组成：**
+| 组件 | 用途 |
+|---|---|
+| **Claude Code** | AI 编码代理，连接用户 ↔ 工具 ↔ LLM（接入国内 LLM） |
+| **R 语言 / RStudio (r-session)** | 数据分析（R 语言） |
+| **Python / Jupyter Lab (jupyter-mcp)** | 数据分析（Python 语言） |
+
+**核心优势：**
+- 🏠 **数据不出服务器不出境**，内网可配合一体机部署
+- 🇨🇳 **国内信创环境已验证**：麒麟 V10 + 鲲鹏 CPU ARM aarch64 + 一体机满血版国产 LLM
+- 🔄 **LLM 可按需切换**（DeepSeek / GLM / MiniMax / Kimi / 国产满血版等）
+- 🪶 轻量级浏览器界面，易用易部署易维护
+- 🔓 完全开源免费
+- 📊 AI 不仅应用于**编码阶段**，还应用于**数据分析阶段**，深入了一个维度
+
+---
+
+## 🎯 场景判断：什么时候用 jupyter-mcp
+
+| 场景 | 用什么 | 原因 |
+|---|---|---|
+| **Jupyter Lab 交互式数据分析**（探索数据、画图、建模） | `jupyter-mcp` | 代码在 kernel 中执行，结果实时显示在 Notebook/Console |
+| **写 Python 脚本完成某个任务**（爬虫、处理文件、自动化等） | 直接 Bash / 命令行执行 | jupyter-mcp 是交互式分析工具，不是通用 Python 执行器 |
+
+**核心原则：** `jupyter-mcp` 只用于 Jupyter Lab 中的交互式数据分析。不要用它执行通用 Python 任务。
+
+---
+
+## Python 交互式数据分析 (Jupyter MCP)
+
+### 架构
+```
+AI 模型 ⇄ Claude Code ⇄ MCP (jupyter-mcp) ⇄ ZMQ (jupyter_client) ⇄ Jupyter Lab Kernel
+```
+- 注册文件：`~/.jupyter-mcp/current`
+- 工具名：`mcp__jupyter-mcp__*`（Claude Code 给 MCP 工具加 `mcp__<server>__` 前缀）
+
+### 通用工具（两种模式共用）
+| 工具 | 功能 |
+|---|---|
+| `list_objects` | 列出 kernel 中所有变量 |
+| `preview_data` | 预览变量详情 |
+| `get_loaded_packages` | 列出已加载的包 |
+| `health_check` | 检查连接状态 |
+
+### 使用步骤
+1. 在 Jupyter Lab 中运行 `from jupyter_mcp import hook; hook.register()`
+2. MCP Server 自动连接 kernel
+3. 使用 `run_code` 执行分析代码
+4. 结果自动显示在 Notebook 或 Console（取决于模式）
+
+---
+
+### 📓 Notebook 模式（.ipynb）
+
+**场景：** JupyterLab 中打开 .ipynb 文件做交互式分析
+
+**启动：** 在 Notebook cell 中运行 `hook.register()`（自动检测为 notebook 模式）
+
+**工作流程：**
+1. `run_code` 执行代码 → 自动插入新 Cell 到 .ipynb 文件
+2. `jupyterlab-auto-reload` 扩展在 3 秒内自动刷新 Notebook 显示
+   —— ⚠️ **仅当浏览器模型"不脏"时才会刷新**，脏模型会静默跳过。
+   用户自己对 Notebook 的改动，要存盘后才能指挥 AI 分析数据，否则更新冲突会导致浏览器页面一片空白，需手工刷新页面才能恢复。
+3. 结果写回 Cell 中，包含执行序号和输出
+
+**可用工具：**
+| 工具 | Notebook 模式 |
+|---|---|
+| `run_code` | ✅ 插 cell + 写回结果 |
+| `export_data` / `import_data` | ✅ 可用，**不产生 cell**（但会消耗一次 kernel 执行号） |
+| `read_source` / `write_source` / `append_source` | ❌ 报「当前不是 .py + Console 模式，或找不到 .py 源文件路径」 |
+
+> 需要在 Notebook 里留痕的导入导出，**用标准代码方式**（写进 `run_code`）。
+
+---
+
+### 🐍 .py + Console 模式
+
+**场景：** JupyterLab 中打开 .py 文件 + "Create Console for Editor" 做交互式分析
+
+**启动：** 在 .py 文件或 Console 中运行 `hook.register()`（自动检测为 console 模式）
+
+**工作流程：**
+1. `run_code` 执行代码 → **不修改 .py 文件**
+2. `jupyterlab-console-adopt` 扩展自动捕获 kernel IOPub 消息
+3. 在 Console 中创建 CodeCell 显示源码 + 输出（执行序号 `[1]`、`[2]`...）
+4. 代码**不重复执行**，仅捕获已有的执行结果
+
+**原理：** Console 只显示自身 session 的输出（JupyterLab issue #9936）。console-adopt 监听 kernel.iopubMessage（所有 session 的消息），检测外部 execute_input → 创建 CodeCell + 伪 future 捕获后续消息。
+
+**MCP 工具的 Console 可见性：** `export_data` / `import_data` 内部通过 kernel `execute_request` 执行代码，会触发 `execute_input` 消息，因此 `console-adopt` 也能捕获并生成 Console CodeCell（各 1 个）。`run_code` 同理。
+
+**可用工具：**
+| 工具 | 功能 |
+|---|---|
+| `run_code` | 执行代码（不写回 .py） |
+| `read_source` | 读取 .py 源码内容 |
+| `write_source` | 写入/覆盖 .py 源码文件 |
+| `append_source` | 追加代码到 .py 源码末尾 |
+
+### ⚠️ Python 作图：中文字体配置
+
+**系统可用字体清单（`fc-list :lang=zh`）：**
+| 字体文件 | 字体名 | 适用性 |
+|---|---|---|
+| `SimHei` 黑体 | `SimHei` | ✅ 最佳，ASCII+CJK 完整字符集 |
+| `FangSong` 仿宋 | `FangSong` | ✅ 完整字符集 |
+| `SimSun` 宋体 | `SimSun` | ✅ 完整字符集 |
+| `KaiTi` 楷体 | `KaiTi` | ✅ 完整字符集 |
+
+**在 Jupyter kernel 中作图的正确姿势：**
+
+每次使用 `run_code` 执行 matplotlib 绘图前，必须先设定中文字体，否则中文显示为方框。
+
+```python
+# ✅ 标准初始化——放在所有 plot 代码最前面
+import matplotlib
+matplotlib.rcdefaults()
+matplotlib.rcParams['font.sans-serif'] = ['SimHei']     # 黑体，ASCII+CJK 均有
+matplotlib.rcParams['axes.unicode_minus'] = False       # 解决负号显示问题
+```
+
+> **不要用** `matplotlib.rcParams['font.family'] = 'Droid Sans Fallback'` 或 `FontProperties` 逐个设置。`rcParams['font.sans-serif']` 用 `SimHei` 一次性搞定所有中英文混排。
+
+---
+
+### 与 r-session 对比
+- `jupyter-mcp`：Python 交互式数据分析，连接 Jupyter kernel，Cell/Console 可见
+- `r-session`：R 语言分析，连接 RStudio session，Console 可见
+- Jupyter kernel 原生支持 ZMQ 协议，不需要在 kernel 内额外起 HTTP server
+
+## R 语言数据分析
+
+### 通过 MCP Server "r-session" 操作当前 RSession
+
+- R 语言数据分析任务全部通过 MCP Server `r-session` 完成（工具名 `mcp__r-session__*`）
+- 架构：AI 模型 ⇄ Claude Code ⇄ MCP (r-session) ⇄ R API (httpuv) ⇄ RStudio R Session
+- R API 运行在 `http://127.0.0.1:<port>`，通过 `POST /eval` 执行 R 代码
+- 端口由 MCP 配置里 `r-session` 的 `env.R_API_PORT` 指定（本机实际 8226）
+- MCP Server 脚本：`r-session-ai/r-session-mcp-server.py`；R API 脚本：`r-session-ai/r-session-api.R`
+
+### 使用方式
+- 先确认 R API 是否运行：`curl -s -H "Authorization: Bearer <token>" http://127.0.0.1:<port>/health`
+- 如果未运行，让用户在 RStudio Console 中执行：
+  ```r
+  options(rsession_api_port = 用户的端口)
+  options(rsession_api_token = "<你的Token>")
+  source("r-session-ai/r-session-api.R")
+  ```
+- 重新加载前先停旧的：`httpuv::stopServer(server)`
+- 通过 `curl -X POST http://127.0.0.1:<port>/eval -H "Authorization: Bearer <token>" -H "Content-Type: application/json" -d '{"code":"..."}'` 执行 R 代码
+- 代码结果和变量直接写入 RStudio 的 RSession，图和输出显示在 RStudio IDE 中
+
+### 可见模式（Console 回显）
+- **目标**：让用户在 RStudio Console 中看到执行的源码和输出
+- **方法**：先把 R 代码写入 `.R` 文件（放在 `~/.claude/workspace/R/` 子目录，首次 `mkdir -p`），然后用**绝对路径**执行——R 的工作目录是仓库根，`source("R/xxx.R")` 相对路径会报「无法打开文件」：
+  ```r
+  WS <- "/home/ubuntu/.claude/workspace"
+  source(file.path(WS, "R/xxx.R"), echo = TRUE)
+  ```
+- R 相关的所有 .R 文件、中间数据文件等均放入 `R/` 子目录管理（不入仓库）
+- R API 中 `safe_eval()` 的 `console_echo` 参数控制是否回显到 Console
+- 绘图用 `source(echo = TRUE)` 也能正常渲染到 RStudio Plots 面板
+- **⚠️ `run_code` 裸表达式不回显**：`eval()` 不做 Console 自动打印，`run_code('getwd()')` 只回「✅ 执行成功」。必须用 `cat()`/`print()` 显式输出；多行分析走 `source(..., echo=TRUE)`（此时 `print.eval` 自动生效）。
+
+### ⚠️ R 作图：回显 Plots 面板的正确姿势
+
+**核心：不要打开显式设备，直接 `print(p)` 走默认设备 RStudioGD。**
+
+```r
+# ✅ 正确——图进 RStudio Plots 面板
+p <- ggplot(...) + theme_minimal(base_family = "SimSun")
+print(p)
+
+# ❌ 错误——只写出文件，Plots 面板看不到
+agg_png("out.png"); print(p); dev.off()
+png("out.png");     print(p); dev.off()
+```
+
+- `getOption("device")` 为 `"RStudioGD"` 时，`print(p)` 才会进 Plots 面板
+- 脚本开头建议 `graphics.off()` 清掉遗留的显式设备（否则 `dev.cur()` 可能仍是 `agg_png`）
+- 执行方式仍按可见模式：写入 `~/.claude/workspace/R/xxx.R` 后 `source(file.path(WS, "R/xxx.R"), echo = TRUE)`
+
+### ⚠️ R 作图：中文字体只能用 `SimSun`
+
+**RStudioGD 设备上，`SimHei` / `黑体` 都解析不到，会静默回退成 `sans` 并打印警告：**
+
+```
+font family 'SimHei' not found, will use 'sans' instead
+```
+
+> 这与上面 **Python 侧用 `SimHei`** 的结论不同：matplotlib 走 fontconfig/字体文件路径，
+> R 的 RStudioGD 走内部 family 名。**R 用 `SimSun`，Python 用 `SimHei`，不要混用。**
+
+标准写法：
+
+```r
+theme_cn <- theme_minimal(base_family = "SimSun", base_size = 12) +
+  theme(plot.title    = element_text(family = "SimSun", face = "bold"),
+        plot.subtitle = element_text(family = "SimSun"),
+        axis.title    = element_text(family = "SimSun"),
+        axis.text     = element_text(family = "SimSun"),
+        legend.text   = element_text(family = "SimSun"),
+        legend.title  = element_text(family = "SimSun"))
+```
+
+### ⚠️ RMariaDB 的 BIGINT 返回 `integer64`（不是 raw）
+
+`SELECT COUNT(*)` 返回 `bit64::integer64`，**值是正确的**——`as.numeric()` / `print()` / `as.character()` 都正常。
+唯一注意：**别用 `cat()` 直接打印**（会按底层 double 显示成 `4.94e-324` 假象），取数用 `as.numeric(x)` 即可，无需 SQL 侧 CAST 或 R 侧还原 raw。
+
+### ⚠️ 长输出超限 → 用 `run_with_sink.R` 落盘
+
+R API 输出超过上限会截断（默认 2000 行，可用环境变量 `R_SESSION_OUTPUT_LINE_LIMIT` 调）。
+需要完整结果时，用 `R/run_with_sink.R` 定义 `run_with_sink(src, out)` 函数落盘，再用 read 读：
+
+```r
+source("/home/ubuntu/.claude/workspace/R/run_with_sink.R")   # 定义函数（不要 echo=TRUE）
+run_with_sink("/home/ubuntu/.claude/workspace/R/analyze.R")
+# 或显式指定输出文件：
+run_with_sink("/home/ubuntu/.claude/workspace/R/analyze.R",
+              "/home/ubuntu/.claude/workspace/R/analyze_output.txt")
+```
+
+### ⚠️ 变量名禁区（会被 API 误用为函数而 500）
+
+R API 辅助函数住在 `.GlobalEnv`，**给变量起下面这些名字会直接覆盖掉函数**，
+下一次调用即报 `没有"ok"这个函数` / 500 错误：
+
+`ok` `err` `safe_eval` `server` `app` `PORT` `HOST` `API_TOKEN` `MAX_ROW`
+`obj_to_list` `safe_str` `parse_json_body` `env_port`
+
+误覆盖后按 `r-session-api.R` 第 144/155 行的定义重新赋值 `ok` / `err` 即可恢复（无需重启 server）。
+
+### ⚠️ `MASS::select` 会遮蔽 `dplyr::select`
+
+`MASS` 包已被 attach（被 `tidymodels` / `bonsai` 等隐式加载），其 `select()` 排在 `dplyr::select` 之前，
+`df %>% select(all_of(cols))` 会报「参数没有用」错误。
+
+- 列选择一律用 `dplyr::select(...)` 显式调用
+- 不要 `library(MASS)`；需要广义逆时用 `MASS::ginv(...)` 直接调用
+
+### 关键端点
+| 端点 | 用途 |
+|---|---|
+| `GET /health` | 健康检查 |
+| `GET /env` | 列出 R 环境中的对象 |
+| `GET /preview/{name}` | 预览某个对象 |
+| `POST /eval` | 执行 R 代码，可修改 session |
+| `POST /eval/quiet` | 静默执行 R 代码 |
+| `GET /packages` | 列出已加载的包 |
+
+### ⚠️ 注意事项：`rm(list=ls())` 会清掉 API 函数
+R API 的辅助函数（`safe_eval`、`ok`、`err`、`server` 等）存储在 `.GlobalEnv` 中。如果用户在 RStudio Console 中执行 `rm(list=ls())`，API 处理器会被一并清除，需重新 `source("r-session-ai/r-session-api.R")` 恢复。
+
+### 安全加固：R API Token 认证
+
+**背景：** 多用户场景下，R API 绑定 127.0.0.1 但所有本地用户可访问。恶意用户可扫描端口后
+`curl http://127.0.0.1:<port>/eval` 执行任意 R 代码，劫持其他用户的 R session。
+
+**方案：** R API + MCP Server 增加 Bearer Token 认证
+
+```
+┌─ Claude Code MCP 配置（r-session.env）──┐
+│ R_API_TOKEN: "<secret>"                 │
+└─────────────────────────────────────────┘
+     │ 传递给 MCP Server
+     ▼
+┌─ r-session-mcp-server.py ──────────┐
+│ _client_headers["Authorization"]   │
+│     = f"Bearer {R_API_TOKEN}"       │
+│ → 所有请求自带 Bearer Token         │
+└──────────────────────────────────────┘
+     │ HTTP 请求
+     ▼
+┌─ r-session-api.R ─────────────────┐
+│ API_TOKEN <- Sys.getenv(...)       │
+│ 每个请求验证 Authorization header  │
+│ 不匹配 → 401 unauthorized          │
+└──────────────────────────────────────┘
+```
+
+**API Token 为空时不启用认证**（向后兼容，适合纯单用户场景）。
+
+**多用户部署时每个用户的 Token 应不同：**
+```bash
+python3 -c "import secrets; print(secrets.token_urlsafe(24))"
+```
+
+**健康检查（带 Token）：**
+```bash
+curl -H "Authorization: Bearer <token>" http://127.0.0.1:<port>/health
+```
+
+**MCP Server 自动读取 `R_API_TOKEN` 环境变量，在 Claude Code 的 MCP 配置（`r-session.env`）中配置即可。**
+
+### 启动依赖
+- shebang 已改为 `graphrag` conda env 的 Python（`/usr/lib64/anaconda3/envs/graphrag/bin/python3`）
+- 两个 MCP Server 使用相同 Python 环境
+
+---
+
+## R ↔ Python 双向数据交换
+
+两个 MCP Server（r-session + jupyter-mcp）各有一对 `export_data` / `import_data` 工具，通过 CSV 文件实现 R Session 和 Jupyter Kernel 之间的数据交换。
+
+### 设计理念
+- 跨 session 传的**只限小数据集**，大数据集在该 session 原地处理
+- **只用 CSV** — R 和 Python 都原生支持，方案最简单通用
+- CSV 类型可能失真，但小数据集一两个 `as.integer()` / `astype()` 就修好了
+- 核心原则：**简单通用，偶尔手动修正**
+
+### 架构
+```
+R Session → R API (httpuv) → r-session-mcp (Python) → CSV
+                                                         ↓
+Jupyter Kernel ← jupyter-mcp (Python) ← CSV
+```
+
+### 工具（固定 CSV格式）
+
+**r-session-mcp：**
+| 工具 | 内部实现 |
+|---|---|
+| `export_data(name)` | R 侧 `data.table::fwrite()` 写 CSV |
+| `import_data(path, var_name)` | R 侧 `data.table::fread()` 读 CSV |
+
+**jupyter-mcp：**
+| 工具 | 内部实现 |
+|---|---|
+| `export_data(name)` | Python 侧 `pandas.to_csv()` 写 CSV |
+| `import_data(path, var_name)` | Python 侧 `pandas.read_csv()` 读 CSV |
+
+### 共享目录
+- **默认位置：** `~/.openclaw/workspace/r2py/`（MCP server 默认值，两端一致即可）
+- **环境变量覆盖：** 设置 `R2PY_SHARED_DIR`（统一）或 `R_SHARED_DIR` / `JUPYTER_SHARED_DIR`（分别覆盖）
+- **文件名：** UUID 前缀 + `.csv`
+
+### 使用流程
+
+数据交换有两种方式，选哪种取决于你**是否需要在 Notebook 中看到导出/导入的 Cell**：
+
+| 方式 | .py + Console | Notebook | R Console |
+|---|---|---|---|
+| **MCP 工具**（`export_data` / `import_data`） | ✅ Console 可见 | ❌ 无 Cell | ✅ Console 可见 |
+| **标准代码**（`pd.read_csv` / `fwrite` 等） | ✅ Console 可见 | ✅ 有 Cell | ✅ Console 可见 |
+
+#### 方式一：MCP 工具（快速手递手）
+适合不在意 Notebook Cell 显示的场景（调试、后台、.py + Console 模式）。工具自动生成 UUID 文件名。
+
+```
+# R → Python
+r-session-mcp.export_data(name="df")
+jupyter-mcp.import_data(path="...", var_name="df")
+df['date'] = pd.to_datetime(df['date'])  # 日期修复
+
+# Python → R
+jupyter-mcp.export_data(name="result")
+r-session-mcp.import_data(path="...", var_name="result")  # 全类型无损
+```
+
+#### 方式二：标准代码（Notebook Cell / Console 双可见）
+适合需要在 Notebook 留痕的场景。两边都用原生读写函数，通过 `run_code` / `source(echo=TRUE)` 执行。
+
+```
+# ── R 端（写入 R/ 脚本，source(echo=TRUE) 执行）──
+fwrite(df, "r2py/df_from_r.csv")
+result <- fread("r2py/result_from_py.csv")
+
+# ── Python 端（run_code 执行，Notebook 插 Cell / Console 可见）──
+summary = pd.read_csv("r2py/summary_r.csv")
+sales.to_csv("r2py/sales_export.csv", index=False)
+```
+
+| 步骤 | R 端（Console 可见） | Python Notebook 端（Cell 可见） | Python .py + Console 端（Console 可见） |
+|---|---|---|---|
+| 执行分析代码 | `source(file.path(WS, "R/xxx.R"), echo=TRUE)` | `run_code(...)` → 插 Cell | `run_code(...)` → console-adopt 显示 |
+| **导出数据** | `fwrite()` 写在 `.R` 脚本中 | `df.to_csv()` 写在 `run_code` 里 | `df.to_csv()` 写在 `run_code` 里 |
+| **导入数据** | `fread()` 写在 `.R` 脚本中 | `pd.read_csv()` 写在 `run_code` 里 | `pd.read_csv()` 写在 `run_code` 里 |
+
+> **关于 MCP 工具的 Console 可见性：**
+> `export_data` / `import_data` 内部通过 kernel `execute_request` 执行代码，会触发 `execute_input` 消息。
+> - `.py + Console` 模式：`console-adopt` 捕获后生成 Console CodeCell，**各 1 个**
+> - Notebook 模式：MCP 工具操作不写入 .ipynb 文件，**不会产生 Cell**
+>
+> 需要 Notebook Cell 可见的导出/导入，用方式二（标准代码 + `run_code`）。
+
+### MCP 配置
+在 Claude Code 的 MCP 配置（`~/.claude.json` 的 `mcpServers`，或仓库根 `.mcp.json`）中：
+- r-session：已配 env `R_API_HOST=127.0.0.1`、`R_API_PORT`、`R_API_TOKEN`、`R_API_TIMEOUT`（端口/Token 各用户不同）
+- jupyter-mcp：已配（无额外 env 需要）
+- 多用户时需注意：
+  - 每人**端口不同**（避免端口冲突），通过 `r-session.env.R_API_PORT` 配置
+  - 每人**Token 不同**（确保安全隔离）
+  - R API Token 优先级：`options(rsession_api_token=...)` > 环境变量 `R_API_TOKEN` > 空（不启用）
+  - 多用户时只需为每个用户设不同的 `R2PY_SHARED_DIR` 即可隔离

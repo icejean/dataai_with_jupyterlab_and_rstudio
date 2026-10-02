@@ -1,0 +1,26 @@
+{
+  "mcpServers": {
+    "jupyter-mcp": {
+      "type": "stdio",
+      "command": "<PYTHON>",
+      "args": [
+        "<REPO_PATH>/jupyter_mcp/jupyter-mcp-server.py"
+      ]
+    },
+    "r-session": {
+      "type": "stdio",
+      "command": "<PYTHON>",
+      "args": [
+        "<REPO_PATH>/r-session-ai/r-session-mcp-server.py"
+      ],
+      "env": {
+        "R_API_HOST": "127.0.0.1",
+        "R_API_PORT": "<R_API_PORT>",
+        "R_API_TOKEN": "<R_API_TOKEN>",
+        "R_API_TIMEOUT": "300",
+        "NO_PROXY": "127.0.0.1,localhost",
+        "no_proxy": "127.0.0.1,localhost"
+      }
+    }
+  }
+}

@@ -1,13 +1,14 @@
 # DataAI — DeepSeek Harness (DSH) 后端接入（dsh-tui）
 
-DataAI 支持两个**并列**的 agent 后端，在终端窗口直接启动（DSH 用 `dsh --profile dsh-tui`，可选自建 `dsh-tui`/`dst` 别名）：
+DataAI 支持三个**并列**的 agent 后端，在终端窗口直接启动（DSH 用 `dsh --profile dsh-tui`，可选自建 `dsh-tui`/`dst` 别名）：
 
 | 后端 | 启动命令 | 定位 |
 |---|---|---|
 | **OpenClaw**（默认） | `openclaw chat` | 嵌入模式、`baidu-search` skill、`agent-browser` 等专属工具 |
 | **DeepSeek Harness / DSH** | `dsh --profile dsh-tui`（别名 `dsh-tui`/`dst`） | DeepSeek 原生 harness、信创、国产模型直连 |
+| **Claude Code** | `claude`（在仓库目录） | Anthropic CLI，接入国内 LLM、Vibe Coding；见 [claude_code/README.md](../claude_code/README.md) |
 
-二者共用同一对 MCP Server（`jupyter-mcp` + `r-session`）。在 RStudio 或 JupyterLab 里开一个终端窗口，跑对应命令即可。
+三者共用同一对 MCP Server（`jupyter-mcp` + `r-session`）。在 RStudio 或 JupyterLab 里开一个终端窗口，跑对应命令即可。
 
 ## 1. 为什么用 DSH
 

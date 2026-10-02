@@ -1,6 +1,6 @@
 # 🦞 R Session AI — 连接 R 与 AI 助手的轻量方案
 
-在 RStudio Server 中运行，让 AI 助手（OpenClaw / Claude Desktop / 任何 MCP 客户端）能读取、分析、操作当前 R session 中的数据——**数据完全不出服务器**。
+在 RStudio Server 中运行，让 AI 助手（OpenClaw / DSH / Claude Code / 任何 MCP 客户端）能读取、分析、操作当前 R session 中的数据——**数据完全不出服务器**。
 
 ## 架构
 
@@ -28,7 +28,7 @@
                           │ HTTP (127.0.0.1:{R_API_PORT})
                           ▼
 ┌──────────────────────────────────────────────────────────────────────┐
-│  OpenClaw (主进程)                                                   │
+│  OpenClaw / DSH / Claude Code (主进程)                               │
 │                                                                      │
 │  ┌─ openclaw.json 中 mcp.servers.r-session ──────────────────────┐   │
 │  │  command: python3 r-session-mcp-server.py                     │   │
@@ -53,7 +53,7 @@
 -   **可写回**：`POST /eval` 执行的代码直接作用在 `.GlobalEnv`
 -   **仅本地**：监听 `127.0.0.1`，数据不出服务器
 -   **Token 认证**：所有 API 请求必须携带 Bearer Token，防止非授权访问
--   **模型无关**：模型由 Agent 后端（OpenClaw / DSH）控制，可换任意国产/本地模型
+-   **模型无关**：模型由 Agent 后端（OpenClaw / DSH / Claude Code）控制，可换任意国产/本地模型
 
 ------------------------------------------------------------------------
 
@@ -92,7 +92,7 @@ source("r-session-ai/r-session-api.R")
 
 Console 可以继续正常使用 R。
 
-### 3. 在 Agent 后端中配置 MCP Server（OpenClaw / DSH，推荐：stdio 模式）
+### 3. 在 Agent 后端中配置 MCP Server（OpenClaw / DSH / Claude Code，推荐：stdio 模式）
 
 在 `openclaw.json` 的 `mcp.servers` 中添加：
 
@@ -129,6 +129,7 @@ Console 可以继续正常使用 R。
 配置完成后重启 Agent 后端即可自动拉起 MCP Server。
 
 > **DSH 后端：** 同一 MCP Server 无需改动，可直接挂到 DSH —— 配置见 [dsh/README.md](../dsh/README.md)。
+> **Claude Code 后端：** 同样可直接挂到 Claude Code —— 配置见 [claude_code/README.md](../claude_code/README.md)。
 
 ### 4. 安装 Python 依赖（MCP Server 端）
 
