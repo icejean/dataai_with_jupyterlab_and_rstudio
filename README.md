@@ -331,6 +331,7 @@ R Session                    CSV 文件                    Jupyter Kernel
 | 深度学习           | ✅ PyTorch / TensorFlow   | ✅ rtorch              |
 | 时间序列分析       | ✅ statsmodels / prophet  | ✅ forecast            |
 | 报表生成           | ✅ nbconvert              | ✅ rmarkdown           |
+| 交互式 Web 应用（仪表盘） | ✅ Shiny for Python | ✅ shiny               |
 
 ------------------------------------------------------------------------
 

@@ -334,6 +334,7 @@ Filename: UUID prefix + .csv
 | Deep learning                    | ✅ PyTorch / TensorFlow  | ✅ rtorch              |
 | Time series                      | ✅ statsmodels / prophet | ✅ forecast            |
 | Report generation                | ✅ nbconvert             | ✅ rmarkdown           |
+| Interactive web apps (dashboards) | ✅ Shiny for Python   | ✅ shiny               |
 
 ------------------------------------------------------------------------
 
