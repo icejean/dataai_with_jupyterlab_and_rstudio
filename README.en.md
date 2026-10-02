@@ -1,4 +1,4 @@
-# Data AI
+# Data AI [简体中文](./README.md) · [Third-Party Backend DIY](./docs/agent-backend-todo.md)
 
 > OpenClaw / DeepSeek Harness / Claude Code with Jupyter Lab and Rstudio
 
@@ -361,6 +361,7 @@ Subdirectory deployment guides:
 | `r-session-ai/` | [README.en.md](./r-session-ai/README.en.md) | R API startup & MCP config |
 | `dsh/` | [README.md](./dsh/README.md) | DeepSeek Harness (DSH) backend install & config |
 | `claude_code/` | [README.md](./claude_code/README.md) | Claude Code backend install & config |
+| `docs/` | [agent-backend-todo.md](./docs/agent-backend-todo.md) · [diy-backend-integration-guide.md](./docs/diy-backend-integration-guide.md) | Third-party coding-agent backend DIY integration |
 
 > Minimal runnable connection-verification scripts: [`mcp-examples/`](./mcp-examples/) — `r-session.R` (R side), `test.py` (console mode), `test.ipynb` (Notebook mode).
 

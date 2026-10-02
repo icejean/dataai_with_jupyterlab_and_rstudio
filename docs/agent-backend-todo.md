@@ -25,6 +25,8 @@ DataAI 现有三个**内置**后端，共用同一对 stdio MCP Server（`jupyte
 - **优先级**：★★★ 强烈建议 / ★★☆ 可选 / ★☆☆ 观察
 - **状态**：☐ 待 DIY 接入；接入完成（产出对齐 `claude_code/` 的三件套）后改为 ✅
 
+### 国内
+
 | 状态 | 后端 | 厂商 | 许可 | 形态 | MCP 客户端 | 国内 LLM | 优先级 | 指南 |
 |---|---|---|---|---|---|---|---|---|
 | ☐ | **Qwen Code** | 阿里通义 | 开源 Apache-2.0 | TUI / CLI | stdio·SSE·HTTP·OAuth | Qwen3-Coder（可 BYOK） | ★★★ | [§4.1](diy-backend-integration-guide.md#41-qwen-code阿里通义) |
@@ -35,6 +37,19 @@ DataAI 现有三个**内置**后端，共用同一对 stdio MCP Server（`jupyte
 | ☐ | **Qoder CN CLI** | 阿里通义灵码 | 闭源免费（个人版） | TUI / print / mcp serve | MCP（可反向当 server） | 通义灵码 | ★☆☆ | [§4.6](diy-backend-integration-guide.md#46-qoder-cn-cli阿里通义灵码) |
 | ☐ | **ZCode CLI** | 智谱 | 待核实 | CLI / ACP | MCP tools | GLM | ★☆☆ | 待核实 |
 | ☐ | **DeepSeek-TUI** | 社区（非官方） | 待核实 | TUI | MCP | DeepSeek | 观察 | 待核实 |
+
+### 国外
+
+| 状态 | 后端 | 厂商 | 许可 | 形态 | MCP 客户端 | 默认模型 / BYOK | 优先级 | 指南 |
+|---|---|---|---|---|---|---|---|---|
+| ☐ | **OpenCode** | opencode-ai（社区） | 开源 | TUI / CLI | local / remote MCP | 75+ 模型（BYOK） | ★★★ | [§4.7](diy-backend-integration-guide.md#47-opencode) |
+| ☐ | **Gemini CLI** | Google | 开源 Apache-2.0 | TUI / CLI | stdio·SSE·HTTP | Gemini（免费额度，可 BYOK） | ★★☆ | [§4.8](diy-backend-integration-guide.md#48-gemini-cli) |
+| ☐ | **Goose** | Block / Linux Foundation | 开源 Apache-2.0 | TUI / CLI | stdio（3000+ MCP 生态） | 多模型 | ★★☆ | [§4.9](diy-backend-integration-guide.md#49-goose) |
+| ☐ | **Codex CLI** | OpenAI | 开源（Rust） | TUI / CLI | stdio·HTTP | GPT-5.x-Codex（可 BYOK） | ★★☆ | [§4.10](diy-backend-integration-guide.md#410-codex-cli) |
+| ☐ | **Crush** | Charm | NOASSERTION | TUI | stdio·HTTP·SSE | 多模型 | ★☆☆ | [§4.11](diy-backend-integration-guide.md#411-crush) |
+| ☐ | **Aider** | 开源社区 | Apache-2.0 | CLI | MCP（部分支持） | 多模型 | ★☆☆ | 待核实 |
+
+> 国外后端同样遵循「支持 MCP client 即可接入」的判据。**OpenCode** 是 MiMo-Code 的上游（小米 MiMo 即其 fork），社区最活跃、BYOK 75+ 模型；**Gemini CLI** / **Goose** / **Codex CLI** 均开源且 MCP 成熟；**Crush**（Charm）终端体验最佳但许可为 NOASSERTION；**Aider** 偏 git-native、MCP 为部分支持。国外后端默认接国外模型，同样可 BYOK 指向国内 LLM（DeepSeek / GLM 等）。
 
 ## 优先级说明
 

@@ -19,10 +19,10 @@ DataAI 的「AI 大脑」是插拔式的。三个内置后端（OpenClaw / DSH /
 
 ## 1. 判断你的 Agent 能不能接
 
-三个条件，全满足即可：
+三个条件，全满足即可（**国内 / 国外后端都适用**）：
 
 1. **支持 MCP client**——能添加「本地 stdio MCP server」（命令 + 参数 + 环境变量）
-2. **能接国内 LLM**——自带国产模型，或能配 endpoint 指向 DeepSeek / GLM / Kimi / MiniMax / 通义等
+2. **能接 LLM**——国内或国外模型均可（自带模型，或能配 endpoint 指向 DeepSeek / GLM / Kimi / MiniMax / 通义 / OpenAI / Anthropic / Gemini 等）
 3. **能跑在 Linux 服务器**——TUI 或 GUI 均可，GUI 也要能装/跑在服务器上
 
 > TUI 还是 GUI 不重要，能调 MCP Server 就行。但 RStudio 和 JupyterHub/JupyterLab 必须跑在 Linux 服务器上——这条是 DataAI 的核心要求，DIY 时不变。
@@ -61,6 +61,11 @@ import secrets; secrets.token_urlsafe(24)
 | CodeBuddy Code CLI | `npm install -g @tencent-ai/codebuddy-code`（Node ≥ 18.20） | `codebuddy --version` |
 | MiMo-Code | `npm i -g @xiaomi-mimo/cli` 或 `curl -fsSL https://mimo.xiaomi.com/install \| bash` | `mimo --version` |
 | Qoder CN CLI | 阿里云灵码官方文档安装 | `qoderclicn --help` |
+| OpenCode | `curl -fsSL https://opencode.ai/install \| bash`（或 `npm i -g opencode-ai`） | `opencode --version` |
+| Gemini CLI | `npm install -g @google/gemini-cli` | `gemini --version` |
+| Goose | `brew install goose`（或官方安装脚本） | `goose --version` |
+| Codex CLI | `npm install -g @openai/codex` | `codex --version` |
+| Crush | `brew install charmbracelet/tap/crush` | `crush --version` |
 
 > 各后端安装命令迭代较快，以上以官方文档为准。安装后先确认命令在 `$PATH` 中、用**绝对路径**调用解释器。
 
@@ -210,6 +215,103 @@ codebuddy mcp add --scope user r-session -- <PYTHON> <REPO_PATH>/r-session-ai/r-
 
 - 通义灵码商用闭源 CLI，TUI / print（`-p`）/ `mcp serve` 三种模式，MCP 配置方式以官方文档为准。
 - 与 Qwen Code 同门，若追求开源可优先选 4.1 的 Qwen Code。
+
+> 以下 4.7–4.11 为**国外**后端。命令与配置格式随版本迭代较快，均以各官方文档为准；核心不变——把 §3 的 stdio 标准配置塞进各家的配置体系即可。
+
+### 4.7 OpenCode
+
+- 配置文件：`~/.config/opencode/opencode.json`（全局）/ 项目根 `opencode.json`（project）
+- 用 `mcp` 键（非 `mcpServers`），`command` 为**数组**、env 用 `environment`：
+
+```jsonc
+{
+  "mcp": {
+    "jupyter-mcp": {
+      "type": "local",
+      "command": ["<PYTHON>", "<REPO_PATH>/jupyter_mcp/jupyter-mcp-server.py"],
+      "enabled": true
+    },
+    "r-session": {
+      "type": "local",
+      "command": ["<PYTHON>", "<REPO_PATH>/r-session-ai/r-session-mcp-server.py"],
+      "environment": {
+        "R_API_HOST": "127.0.0.1",
+        "R_API_PORT": "<R_API_PORT>",
+        "R_API_TOKEN": "<R_API_TOKEN>",
+        "R_API_TIMEOUT": "300"
+      },
+      "enabled": true
+    }
+  }
+}
+```
+
+- 验证：`opencode mcp list`。
+
+### 4.8 Gemini CLI
+
+- 配置文件：`~/.gemini/settings.json`（user）/ `.gemini/settings.json`（project），`mcpServers` 键
+- CLI 添加（stdio 是默认传输）：
+
+```bash
+gemini mcp add -s user jupyter-mcp <PYTHON> <REPO_PATH>/jupyter_mcp/jupyter-mcp-server.py
+gemini mcp add -s user r-session <PYTHON> <REPO_PATH>/r-session-ai/r-session-mcp-server.py \
+  -e R_API_HOST=127.0.0.1 -e R_API_PORT=<R_API_PORT> -e R_API_TOKEN=<R_API_TOKEN> -e R_API_TIMEOUT=300
+```
+
+- 验证：`gemini mcp list` 或 TUI 内 `/mcp`。
+
+### 4.9 Goose
+
+- 配置文件：`~/.config/goose/config.yaml`，`extensions` 键；或交互式 `goose configure` → Add Extension → Command-line Extension
+
+```yaml
+extensions:
+  jupyter-mcp:
+    cmd: <PYTHON>
+    args: ["<REPO_PATH>/jupyter_mcp/jupyter-mcp-server.py"]
+    type: stdio
+    enabled: true
+  r-session:
+    cmd: <PYTHON>
+    args: ["<REPO_PATH>/r-session-ai/r-session-mcp-server.py"]
+    type: stdio
+    envs:
+      R_API_HOST: "127.0.0.1"
+      R_API_PORT: "<R_API_PORT>"
+      R_API_TOKEN: "<R_API_TOKEN>"
+    enabled: true
+```
+
+- 验证：`goose configure` 或 TUI 内 `/mcp` 查看连接状态。
+
+### 4.10 Codex CLI
+
+- 配置文件：`~/.codex/config.toml`（全局）/ `.codex/config.toml`（project），**只认 `[mcp_servers.<name>]`**（TOML）
+
+```toml
+[mcp_servers.jupyter-mcp]
+command = "<PYTHON>"
+args = ["<REPO_PATH>/jupyter_mcp/jupyter-mcp-server.py"]
+
+[mcp_servers.r-session]
+command = "<PYTHON>"
+args = ["<REPO_PATH>/r-session-ai/r-session-mcp-server.py"]
+
+[mcp_servers.r-session.env]
+R_API_HOST = "127.0.0.1"
+R_API_PORT = "<R_API_PORT>"
+R_API_TOKEN = "<R_API_TOKEN>"
+R_API_TIMEOUT = "300"
+```
+
+- 验证：`codex mcp --help` 或 TUI 内 `/mcp`。
+
+### 4.11 Crush
+
+- 配置文件：`crush.json`，用 `mcp` 键（非 `mcpServers`）；也有 `crush mcp add` 命令
+- stdio 配置结构与 §3 标准 JSON 一致（`command` / `args` / `env`），只是根键为 `mcp`
+- 验证：`crush mcp list` 或 TUI 内 `/mcp`。
 
 ## 5. 验证
 
