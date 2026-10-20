@@ -526,6 +526,37 @@ Restart JupyterLab after installation for changes to take effect. For JupyterHub
 
 ------------------------------------------------------------------------
 
+## Best Practices
+
+For **database analysis** (relational → SQL / graph → Cypher) scenarios, it's recommended to prepare two "resource files" for each database to be analyzed, so the agent has the context it needs and avoids detours:
+
+### 1. Data Dictionary: `库名_Schema.json` / `库名_Schema.txt`
+
+Generate a high-quality data dictionary for the database to be analyzed, ideally including **business-semantic explanations of table and column names**, plus **primary key and foreign key definitions**:
+
+-   **Small databases** can use JSON format: `库名_Schema.json`
+-   **Large databases** should use TXT plain-text DDL format: `库名_Schema.txt`
+
+### 2. Accumulated Experience: `库名_notes.md`
+
+Consolidate the pitfalls and experience accumulated during data analysis into `库名_notes.md`, and reference it directly in subsequent analyses.
+
+### 3. Have the Agent Load the Resource Files
+
+In the persona files of the three agent backends, instruct the agent to load the two resource files above when analyzing problems, and reference them when generating SQL:
+
+| Backend | Persona file |
+|------|-------------|
+| **OpenClaw** | `openclaw/MEMORY.md` |
+| **DeepSeek Harness / DSH** | `dsh/AGENTS.md` |
+| **Claude Code** | root `CLAUDE.md` |
+
+### 4. Graph Databases Follow the Same Pattern
+
+For graph databases generating Cypher queries, follow the same approach as relational databases generating SQL: create and reference the same two kinds of resource files (data dictionary + accumulated experience).
+
+------------------------------------------------------------------------
+
 ## Production Deployment
 
 Refer to the following docs for multi-user production deployment:
