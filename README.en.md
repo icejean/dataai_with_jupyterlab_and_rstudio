@@ -530,16 +530,16 @@ Restart JupyterLab after installation for changes to take effect. For JupyterHub
 
 For **database analysis** (relational → SQL / graph → Cypher) scenarios, it's recommended to prepare two "resource files" for each database to be analyzed, so the agent has the context it needs and avoids detours:
 
-### 1. Data Dictionary: `库名_Schema.json` / `库名_Schema.txt`
+### 1. Data Dictionary: `dbname_Schema.json` / `dbname_Schema.txt`
 
 Generate a high-quality data dictionary for the database to be analyzed, ideally including **business-semantic explanations of table and column names**, plus **primary key and foreign key definitions**:
 
--   **Small databases** can use JSON format: `库名_Schema.json`
--   **Large databases** should use TXT plain-text DDL format: `库名_Schema.txt`
+-   **Small databases** can use JSON format: `dbname_Schema.json`
+-   **Large databases** should use TXT plain-text DDL format: `dbname_Schema.txt`
 
-### 2. Accumulated Experience: `库名_notes.md`
+### 2. Accumulated Experience: `dbname_notes.md`
 
-Consolidate the pitfalls and experience accumulated during data analysis into `库名_notes.md`, and reference it directly in subsequent analyses.
+Consolidate the pitfalls and experience accumulated during data analysis into `dbname_notes.md`, and reference it directly in subsequent analyses.
 
 ### 3. Have the Agent Load the Resource Files
 
